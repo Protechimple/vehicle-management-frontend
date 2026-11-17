@@ -1,9 +1,12 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 
 import ProtectedRoute from './components/ProtectedRoute';
+import PlatformProtectedRoute from './components/PlatformProtectedRoute';
+import { PlatformAuthProvider } from './context/PlatformAuthContext';
 import AppLayout from './layouts/AppLayout';
+import PlatformLayout from './layouts/PlatformLayout';
 import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import DashboardPage from './pages/DashboardPage';
@@ -55,14 +58,57 @@ import MaintenanceHistoryPage from './pages/maintenance/MaintenanceHistoryPage';
 import ComplianceDocumentsPage from './pages/compliance/ComplianceDocumentsPage';
 import ForbiddenPage from './pages/ForbiddenPage';
 import NotFoundPage from './pages/NotFoundPage';
+import PlatformLoginPage from './pages/platform/PlatformLoginPage';
+import PlatformAccountPage from './pages/platform/PlatformAccountPage';
+import PlatformOverviewPage from './pages/platform/PlatformOverviewPage';
+import PlatformActivityPage from './pages/platform/PlatformActivityPage';
+import FeatureFlagsPage from './pages/platform/FeatureFlagsPage';
+import TenantsListPage from './pages/platform/TenantsListPage';
+import TenantFormPage from './pages/platform/TenantFormPage';
+import TenantDetailPage from './pages/platform/TenantDetailPage';
 
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route
+        path="/change-password"
+        element={
+          <ProtectedRoute>
+            <ChangePasswordPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Super Admin area: its own sign-in and session, separate from any organization. */}
+      <Route
+        element={
+          <PlatformAuthProvider>
+            <Outlet />
+          </PlatformAuthProvider>
+        }
+      >
+        <Route path="/platform/login" element={<PlatformLoginPage />} />
+        <Route
+          element={
+            <PlatformProtectedRoute>
+              <PlatformLayout />
+            </PlatformProtectedRoute>
+          }
+        >
+          <Route path="/platform" element={<Navigate to="/platform/tenants" replace />} />
+          <Route path="/platform/overview" element={<PlatformOverviewPage />} />
+          <Route path="/platform/activity" element={<PlatformActivityPage />} />
+          <Route path="/platform/feature-flags" element={<FeatureFlagsPage />} />
+          <Route path="/platform/tenants" element={<TenantsListPage />} />
+          <Route path="/platform/tenants/new" element={<TenantFormPage />} />
+          <Route path="/platform/tenants/:tenantId" element={<TenantDetailPage />} />
+          <Route path="/platform/tenants/:tenantId/edit" element={<TenantFormPage />} />
+          <Route path="/platform/account" element={<PlatformAccountPage />} />
+        </Route>
+      </Route>
 
       <Route
         element={

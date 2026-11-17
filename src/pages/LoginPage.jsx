@@ -40,11 +40,7 @@ export default function LoginPage() {
     <AuthShell
       title="Sign in"
       subtitle="Sign in to your organization"
-      footer={
-        <>
-          Need an organization? <Link to="/signup" className="font-semibold text-brand-600 hover:underline">Create one</Link>
-        </>
-      }
+      footer="Need an account for your organization? Contact the VMMS administrator."
     >
       <Alert tone={noticeTone}>{notice}</Alert>
       <Alert tone="error">{error}</Alert>

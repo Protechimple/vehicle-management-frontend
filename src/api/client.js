@@ -4,11 +4,15 @@ const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api';
 
 export const SESSION_EXPIRED_EVENT = 'vmms:session-expired';
 
+export const PASSWORD_CHANGE_REQUIRED_EVENT = 'vmms:password-change-required';
+const PASSWORD_CHANGE_REQUIRED = 'PASSWORD_CHANGE_REQUIRED';
+
 export class ApiError extends Error {
-  constructor(status, message) {
+  constructor(status, message, code) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
+    if (code) this.code = code;
   }
 }
 
@@ -29,34 +33,50 @@ function endSessionIfExpired(response, token) {
   }
 }
 
-async function request(method, path, body, { signal } = {}) {
-  const headers = { Accept: 'application/json' };
-  const token = readToken();
-
-  if (token) headers.Authorization = `Bearer ${token}`;
-  if (body !== undefined) headers['Content-Type'] = 'application/json';
-
-  let response;
-  try {
-    response = await fetch(`${BASE_URL}${path}`, {
-      method,
-      headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
-      signal,
-    });
-  } catch (error) {
-    if (error.name === 'AbortError') throw error;
-    throw new ApiError(0, 'Cannot reach the server. Check that the API is running.');
+function announcePasswordChangeRequired(payload) {
+  if (payload?.code === PASSWORD_CHANGE_REQUIRED) {
+    window.dispatchEvent(new CustomEvent(PASSWORD_CHANGE_REQUIRED_EVENT));
   }
-
-  const payload = await readBody(response);
-
-  if (response.ok) return payload;
-
-  endSessionIfExpired(response, token);
-
-  throw new ApiError(response.status, payload?.error ?? `Request failed (${response.status})`);
 }
+
+// Builds a JSON request function around one session: where its token lives and what to do when the server rejects it.
+export function createRequest({ getToken, onUnauthorized, onError }) {
+  return async function request(method, path, body, { signal } = {}) {
+    const headers = { Accept: 'application/json' };
+    const token = getToken();
+
+    if (token) headers.Authorization = `Bearer ${token}`;
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
+
+    let response;
+    try {
+      response = await fetch(`${BASE_URL}${path}`, {
+        method,
+        headers,
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal,
+      });
+    } catch (error) {
+      if (error.name === 'AbortError') throw error;
+      throw new ApiError(0, 'Cannot reach the server. Check that the API is running.');
+    }
+
+    const payload = await readBody(response);
+
+    if (response.ok) return payload;
+
+    onUnauthorized(response, token);
+    onError?.(payload);
+
+    throw new ApiError(response.status, payload?.error ?? `Request failed (${response.status})`, payload?.code);
+  };
+}
+
+const request = createRequest({
+  getToken: readToken,
+  onUnauthorized: endSessionIfExpired,
+  onError: announcePasswordChangeRequired,
+});
 
 export const api = {
   get: (path, options) => request('GET', path, undefined, options),
@@ -91,7 +111,6 @@ export async function listAll(fetchPage, params = {}) {
 }
 
 export const authApi = {
-  signUp: (payload) => api.post('/auth/signup', payload),
   logIn: (payload) => api.post('/auth/login', payload),
   logOut: () => api.post('/auth/logout'),
   me: () => api.get('/auth/me'),
@@ -110,7 +129,7 @@ export const usersApi = {
   changeOwnPassword: (payload) => api.put('/users/me/password', payload),
 };
 
-function toQueryString(params = {}) {
+export function toQueryString(params = {}) {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== null && value !== '') search.set(key, value);
