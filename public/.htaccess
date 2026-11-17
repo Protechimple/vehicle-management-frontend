@@ -1,0 +1,10 @@
+# Single-page app: send every path that isn't a real file or folder to
+# index.html so React Router can handle it (e.g. refreshing /login).
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
