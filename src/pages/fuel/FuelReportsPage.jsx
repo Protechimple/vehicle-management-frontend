@@ -4,12 +4,21 @@ import { Alert, Input, Select, Spinner, Tabs } from '../../components/ui';
 import ReportTable from '../../components/ReportTable';
 import { useAuth } from '../../context/AuthContext';
 import useSiteNames from '../../hooks/useSiteNames';
-import { firstOfMonthDateOnly, formatCurrency, formatLitres, todayDateOnly } from '../../config/fuel';
+import {
+  EXTERNAL_CATEGORY,
+  firstOfMonthDateOnly,
+  formatCurrency,
+  formatDateOnly,
+  formatLitres,
+  formatTimeOnly,
+  todayDateOnly,
+} from '../../config/fuel';
 
 const TABS = [
   { value: 'register', label: 'Site fuel register' },
   { value: 'assets', label: 'Fuel by asset' },
   { value: 'collections', label: 'Collections' },
+  { value: 'external', label: 'External vehicles' },
 ];
 
 const qty = (v) => <span className="tabular-nums">{formatLitres(v)}</span>;
@@ -45,6 +54,13 @@ function RegisterReport({ data }) {
     { key: 'opening', label: 'Opening', sortable: true, sortValue: (r) => r.opening.value, render: (r) => <Pair amount={r.opening} /> },
     { key: 'received', label: 'Received', sortable: true, sortValue: (r) => r.received.value, render: (r) => <Pair amount={r.received} /> },
     { key: 'issued', label: 'Issued', sortable: true, sortValue: (r) => r.issued.value, render: (r) => <Pair amount={r.issued} /> },
+    {
+      key: 'external',
+      label: 'External',
+      sortable: true,
+      sortValue: (r) => r.external.value,
+      render: (r) => (r.external.quantity !== 0 ? <Pair amount={r.external} /> : <span className="text-steel-400">—</span>),
+    },
     {
       key: 'closing',
       label: 'Closing',
@@ -245,10 +261,127 @@ function CollectionReport({ data }) {
   );
 }
 
+function ExternalBreakdown({ rows }) {
+  const columns = [
+    {
+      key: 'partyName',
+      label: 'Party',
+      sortable: true,
+      wrap: true,
+      sortValue: (r) => r.partyName.toLowerCase(),
+      render: (r) => (
+        <div className="flex min-w-48 flex-col">
+          <span className="font-semibold wrap-break-word text-steel-900">{r.partyName}</span>
+          <span className="text-xs text-steel-500">{r.categories.map((c) => EXTERNAL_CATEGORY[c] ?? c).join(', ')}</span>
+        </div>
+      ),
+    },
+    { key: 'entries', label: 'Entries', sortable: true, sortValue: (r) => r.entries, align: 'right', render: (r) => <span className="tabular-nums">{r.entries}</span> },
+    { key: 'vehicles', label: 'Vehicles', sortable: true, sortValue: (r) => r.vehicles, align: 'right', render: (r) => <span className="tabular-nums">{r.vehicles}</span> },
+    { key: 'litres', label: 'Litres', sortable: true, sortValue: (r) => r.litres, align: 'right', render: (r) => qty(r.litres) },
+    { key: 'value', label: 'Value', sortable: true, sortValue: (r) => r.value, align: 'right', render: (r) => <span className="font-semibold">{money(r.value)}</span> },
+  ];
+
+  return (
+    <ReportTable
+      title="By party"
+      noun="party name"
+      rows={rows}
+      columns={columns}
+      getRowKey={(r) => r.partyName.toLowerCase()}
+      searchText={(r) => r.partyName}
+      defaultSort={{ field: 'value', direction: 'desc' }}
+      subtitle={() => `${rows.length} ${rows.length === 1 ? 'party' : 'parties'}`}
+      emptyMessage="No fuel given to outside vehicles in this period."
+    />
+  );
+}
+
+function ExternalEntries({ rows }) {
+  const columns = [
+    {
+      key: 'entryDate',
+      label: 'Date',
+      sortable: true,
+      sortValue: (r) => `${r.entryDate} ${r.entryTime ?? ''} ${String(r.id).padStart(10, '0')}`,
+      render: (r) => (
+        <div className="flex flex-col">
+          <span>{formatDateOnly(r.entryDate)}</span>
+          <span className="text-xs text-steel-500 tabular-nums">{[r.entryTime ? formatTimeOnly(r.entryTime) : null, r.entryNumber].filter(Boolean).join(' · ')}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'vehicleNumber',
+      label: 'Vehicle',
+      sortable: true,
+      sortValue: (r) => r.vehicleNumber,
+      render: (r) => (
+        <div className="flex flex-col">
+          <span className="font-semibold text-steel-900">{r.vehicleNumber}</span>
+          {r.vehicleName && <span className="text-xs text-steel-500">{r.vehicleName}</span>}
+        </div>
+      ),
+    },
+    {
+      key: 'partyName',
+      label: 'Party',
+      sortable: true,
+      wrap: true,
+      sortValue: (r) => r.partyName.toLowerCase(),
+      render: (r) => (
+        <div className="flex flex-col">
+          <span>{r.partyName}</span>
+          <span className="text-xs text-steel-500">{EXTERNAL_CATEGORY[r.category] ?? r.category}</span>
+        </div>
+      ),
+    },
+    { key: 'siteName', label: 'Site', sortable: true, sortValue: (r) => r.siteName ?? '', render: (r) => r.siteName ?? '—' },
+    { key: 'fuelType', label: 'Fuel', sortable: true, sortValue: (r) => r.fuelType },
+    { key: 'quantity', label: 'Litres', sortable: true, sortValue: (r) => r.quantity, align: 'right', render: (r) => qty(r.quantity) },
+    { key: 'amount', label: 'Value', sortable: true, sortValue: (r) => r.amount, align: 'right', render: (r) => money(r.amount) },
+    { key: 'authorisedBy', label: 'Authorised by', sortable: true, sortValue: (r) => r.authorisedBy ?? '', render: (r) => r.authorisedBy ?? '—' },
+  ];
+
+  return (
+    <ReportTable
+      title="Entries"
+      noun="record"
+      rows={rows}
+      columns={columns}
+      getRowKey={(r) => r.id}
+      searchText={(r) => `${r.vehicleNumber} ${r.partyName} ${r.entryNumber} ${r.driverName ?? ''} ${r.referenceNumber ?? ''}`}
+      defaultSort={{ field: 'entryDate', direction: 'desc' }}
+      subtitle={() => `${rows.length} ${rows.length === 1 ? 'entry' : 'entries'}`}
+      emptyMessage="No fuel given to outside vehicles in this period."
+    />
+  );
+}
+
+function ExternalReport({ data }) {
+  return (
+    <>
+      <Summary
+        items={[
+          ['Entries', String(data.totals.entries)],
+          ['Vehicles fuelled', String(data.totals.vehicles)],
+          ['Total litres', formatLitres(data.totals.litres)],
+          ['Value at stock cost', formatCurrency(data.totals.value)],
+        ]}
+      />
+      <div className="flex flex-col gap-5">
+        <ExternalBreakdown rows={data.byParty} />
+        <ExternalEntries rows={data.entries} />
+      </div>
+    </>
+  );
+}
+
 const LOADERS = {
   register: fuelReportsApi.siteRegister,
   assets: fuelReportsApi.assetConsumption,
   collections: fuelReportsApi.collections,
+  external: fuelReportsApi.externalFuel,
 };
 
 export default function FuelReportsPage() {
@@ -319,6 +452,7 @@ export default function FuelReportsPage() {
       {data?.tab === tab && tab === 'register' && <RegisterReport data={data.report} />}
       {data?.tab === tab && tab === 'assets' && <AssetReport data={data.report} />}
       {data?.tab === tab && tab === 'collections' && <CollectionReport data={data.report} />}
+      {data?.tab === tab && tab === 'external' && <ExternalReport data={data.report} />}
     </div>
   );
 }
