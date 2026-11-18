@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { authApi, SESSION_EXPIRED_EVENT } from '../api/client';
+import { authApi, PASSWORD_CHANGE_REQUIRED_EVENT, SESSION_EXPIRED_EVENT } from '../api/client';
 import { readSession, writeSession, clearSession } from '../api/session';
 
 const AuthContext = createContext(null);
@@ -48,10 +48,19 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleExpired);
   }, [endSession]);
 
-  const signUp = useCallback(
-    async (details) => startSession((await authApi.signUp(details)).data),
-    [startSession]
-  );
+  // The server refused a request because a temporary password is still in use.
+  useEffect(() => {
+    function handlePasswordChangeRequired() {
+      setSession((current) => {
+        if (!current?.user || current.user.mustChangePassword) return current;
+        const next = { ...current, user: { ...current.user, mustChangePassword: true } };
+        writeSession(next);
+        return next;
+      });
+    }
+    window.addEventListener(PASSWORD_CHANGE_REQUIRED_EVENT, handlePasswordChangeRequired);
+    return () => window.removeEventListener(PASSWORD_CHANGE_REQUIRED_EVENT, handlePasswordChangeRequired);
+  }, []);
 
   const logIn = useCallback(
     async (credentials) => startSession((await authApi.logIn(credentials)).data),
@@ -75,12 +84,12 @@ export function AuthProvider({ children }) {
       isAuthenticated: Boolean(session?.token),
       sessionExpired,
       previousUserId,
-      signUp,
+      mustChangePassword: Boolean(session?.user?.mustChangePassword),
       logIn,
       logOut,
       updateSession,
     }),
-    [session, sessionExpired, previousUserId, signUp, logIn, logOut, updateSession]
+    [session, sessionExpired, previousUserId, logIn, logOut, updateSession]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
