@@ -38,6 +38,10 @@ import TyrePurchaseDetailPage from './pages/tyres/TyrePurchaseDetailPage';
 import TyreFittingPage from './pages/tyres/TyreFittingPage';
 import TyreFitFormPage from './pages/tyres/TyreFitFormPage';
 import TyreReportsPage from './pages/tyres/TyreReportsPage';
+import BatteriesPage from './pages/batteries/BatteriesPage';
+import AddBatteriesPage from './pages/batteries/AddBatteriesPage';
+import BatteryHistoryPage from './pages/batteries/BatteryHistoryPage';
+import BatteryDetailPage from './pages/batteries/BatteryDetailPage';
 import FuelStockPage from './pages/fuel/FuelStockPage';
 import FuelCollectionsPage from './pages/fuel/FuelCollectionsPage';
 import FuelCollectionFormPage from './pages/fuel/FuelCollectionFormPage';
@@ -45,6 +49,8 @@ import FuelCollectionDetailPage from './pages/fuel/FuelCollectionDetailPage';
 import FuelIssuesPage from './pages/fuel/FuelIssuesPage';
 import FuelIssueFormPage from './pages/fuel/FuelIssueFormPage';
 import FuelReportsPage from './pages/fuel/FuelReportsPage';
+import ExternalFuelPage from './pages/fuel/ExternalFuelPage';
+import ExternalFuelFormPage from './pages/fuel/ExternalFuelFormPage';
 import FuelStationsPage from './pages/fuel/FuelStationsPage';
 import AdBlueOverviewPage from './pages/adblue/AdBlueOverviewPage';
 import AdBluePurchasesPage from './pages/adblue/AdBluePurchasesPage';
@@ -189,6 +195,9 @@ export default function App() {
         <Route path="/fuel/issues" element={<FuelIssuesPage />} />
         <Route path="/fuel/issues/new" element={<FuelIssueFormPage />} />
         <Route path="/fuel/issues/:id/edit" element={<FuelIssueFormPage />} />
+        <Route path="/fuel/external" element={<ExternalFuelPage />} />
+        <Route path="/fuel/external/new" element={<ExternalFuelFormPage />} />
+        <Route path="/fuel/external/:id/edit" element={<ExternalFuelFormPage />} />
         <Route path="/fuel/reports" element={<FuelReportsPage />} />
         <Route
           path="/fuel/stations"
@@ -217,6 +226,11 @@ export default function App() {
         <Route path="/tyres/fitting" element={<TyreFittingPage />} />
         <Route path="/tyres/fitting/new" element={<TyreFitFormPage />} />
         <Route path="/tyres/reports" element={<TyreReportsPage />} />
+
+        <Route path="/batteries" element={<BatteriesPage />} />
+        <Route path="/batteries/add" element={<AddBatteriesPage />} />
+        <Route path="/batteries/history" element={<BatteryHistoryPage />} />
+        <Route path="/batteries/:id" element={<BatteryDetailPage />} />
 
         <Route path="/forbidden" element={<ForbiddenPage />} />
       </Route>

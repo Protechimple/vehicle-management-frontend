@@ -17,6 +17,15 @@ export const ENTRY_TYPE = {
   RECEIPT: { label: 'Received', tone: 'success' },
   ISSUE: { label: 'Issued', tone: 'warning' },
   ISSUE_REVERSAL: { label: 'Issue deleted', tone: 'brand' },
+  EXTERNAL_ISSUE: { label: 'External vehicle', tone: 'warning' },
+  EXTERNAL_ISSUE_REVERSAL: { label: 'External entry deleted', tone: 'brand' },
+};
+
+export const EXTERNAL_CATEGORY = {
+  CLIENT: 'Client',
+  GUEST: 'Guest',
+  CONTRACTOR: 'Contractor',
+  OTHER: 'Other',
 };
 
 function isBlank(value) {

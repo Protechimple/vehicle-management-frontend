@@ -123,16 +123,25 @@
   }
 }
 
-@page report {
-  size: landscape;
-}
-
+/* Print / Download: while a report is printing (class set by PrintReport), print only the report, on white.
+   Everything else in <body> is hidden, including anything a browser extension adds, so nothing can push the
+   report onto a second page. The page size comes from PrintReport, as the document's only @page rule. */
 @media print {
-  body:has(> [data-print-report]) {
-    background: white;
+  html.printing-report,
+  html.printing-report body {
+    color-scheme: light;
+    background: white !important;
+    min-height: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
   }
 
-  body:has(> [data-print-report]) > #root {
-    display: none;
+  html.printing-report body > :not([data-print-report]) {
+    display: none !important;
+  }
+
+  html.printing-report [data-print-report] {
+    display: block !important;
+    margin: 0 !important;
   }
 }

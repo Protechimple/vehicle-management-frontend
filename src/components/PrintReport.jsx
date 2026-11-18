@@ -18,6 +18,12 @@ function PrintCell({ value }) {
   ));
 }
 
+// One page setup for every printed report, used only while a report is being printed. It is the document's
+// default page, not a named page, so no browser starts a separate (blank, differently oriented) page before it.
+// Portrait A4 is what phones, laptops and printers use by default, so nothing gets turned on its side.
+const PAGE_STYLE = '@page { size: A4 portrait; margin: 12mm 10mm; }';
+const PRINTING_CLASS = 'printing-report';
+
 function PrintDocument({ report, onDone }) {
   const { user, organization } = useAuth();
   const { logoUrl } = useBranding();
@@ -25,30 +31,48 @@ function PrintDocument({ report, onDone }) {
 
   useEffect(() => {
     let cancelled = false;
+    let timer;
     const previousTitle = document.title;
-    const images = [...ref.current.querySelectorAll('img')];
+    const root = document.documentElement;
+    const pageStyle = document.createElement('style');
+    pageStyle.setAttribute('data-print-report-page', '');
+    pageStyle.textContent = PAGE_STYLE;
+    document.head.appendChild(pageStyle);
+    // A class on <html> hides the app while printing; it works in browsers without :has() support too.
+    root.classList.add(PRINTING_CLASS);
 
+    const finish = () => onDone();
+    const images = [...ref.current.querySelectorAll('img')];
     Promise.all(images.map((image) => image.decode().catch(() => {}))).then(() => {
       if (cancelled) return;
       document.title = `${report.title} ${fileDate(report.generatedAt)}`;
-      window.addEventListener('afterprint', onDone, { once: true });
       window.print();
+      // Phones return from print() straight away and build the PDF later, sometimes announcing "afterprint"
+      // before they have read the page. So the report stays until the person next uses this page.
+      timer = setTimeout(() => {
+        window.addEventListener('pointerdown', finish, { once: true });
+        window.addEventListener('keydown', finish, { once: true });
+      }, 0);
     });
 
     return () => {
       cancelled = true;
-      window.removeEventListener('afterprint', onDone);
+      clearTimeout(timer);
+      window.removeEventListener('pointerdown', finish);
+      window.removeEventListener('keydown', finish);
+      pageStyle.remove();
+      root.classList.remove(PRINTING_CLASS);
       document.title = previousTitle;
     };
   }, [report, onDone]);
 
   return createPortal(
-    <div ref={ref} data-print-report className="hidden text-[11px] leading-snug text-black [page:report] print:block">
-      <header className="flex items-start justify-between gap-6 border-b-2 border-black pb-3">
-        <div className="flex items-center gap-3">
+    <div ref={ref} data-print-report className="hidden w-full max-w-full bg-white text-[10px] leading-snug text-black print:block">
+      <header className="flex items-start justify-between gap-4 border-b-2 border-black pb-3">
+        <div className="flex min-w-0 items-center gap-3">
           {logoUrl && <img src={logoUrl} alt="" className="h-12 max-w-40 object-contain" />}
           <div>
-            <p className="text-base font-bold">{organization?.organizationName}</p>
+            <p className="text-base font-bold wrap-break-word">{organization?.organizationName}</p>
             <h1 className="text-sm font-semibold">{report.title}</h1>
           </div>
         </div>
@@ -87,11 +111,11 @@ function PrintDocument({ report, onDone }) {
           <h2 className="mb-1 text-xs font-semibold">
             {section.title} ({section.rows.length})
           </h2>
-          <table className="w-full border-collapse">
-            <thead>
+          <table className="w-full table-auto border-collapse">
+            <thead className="[display:table-header-group]">
               <tr className="border-b border-black">
                 {section.columns.map((column) => (
-                  <th key={column.key} scope="col" className={`px-1.5 py-1 align-bottom font-semibold ${column.align === 'right' ? 'text-right' : 'text-left'}`}>
+                  <th key={column.key} scope="col" className={`px-1 py-1 align-bottom font-semibold ${column.align === 'right' ? 'text-right' : 'text-left'}`}>
                     {column.label}
                   </th>
                 ))}
@@ -108,7 +132,7 @@ function PrintDocument({ report, onDone }) {
                 section.rows.map((row) => (
                   <tr key={section.getRowKey(row)} className="break-inside-avoid border-b border-neutral-300">
                     {section.columns.map((column) => (
-                      <td key={column.key} className={`px-1.5 py-1 align-top ${column.align === 'right' ? 'text-right tabular-nums' : ''}`}>
+                      <td key={column.key} className={`px-1 py-1 align-top wrap-anywhere ${column.align === 'right' ? 'text-right tabular-nums whitespace-nowrap' : ''}`}>
                         <PrintCell value={column.render(row)} />
                       </td>
                     ))}

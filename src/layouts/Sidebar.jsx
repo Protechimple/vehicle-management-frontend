@@ -117,6 +117,9 @@ export default function Sidebar({ open, onNavigate }) {
           <NavLink to="/fuel/issues" className={linkClasses} onClick={onNavigate}>
             Fuel Issues
           </NavLink>
+          <NavLink to="/fuel/external" className={linkClasses} onClick={onNavigate}>
+            External Vehicle Fuel
+          </NavLink>
           <NavLink to="/fuel/reports" className={linkClasses} onClick={onNavigate}>
             Fuel Reports
           </NavLink>
@@ -154,6 +157,18 @@ export default function Sidebar({ open, onNavigate }) {
           </NavLink>
           <NavLink to="/tyres/reports" className={linkClasses} onClick={onNavigate}>
             Tyre Reports
+          </NavLink>
+        </NavSection>
+
+        <NavSection title="Batteries" paths={['/batteries']}>
+          <NavLink to="/batteries" end className={linkClasses} onClick={onNavigate}>
+            All Batteries
+          </NavLink>
+          <NavLink to="/batteries/add" className={linkClasses} onClick={onNavigate}>
+            Add Batteries
+          </NavLink>
+          <NavLink to="/batteries/history" className={linkClasses} onClick={onNavigate}>
+            Battery History
           </NavLink>
         </NavSection>
 

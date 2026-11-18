@@ -381,6 +381,14 @@ export const fuelTransactionsApi = {
     api.get(`/fuel-transactions/efficiency/${encodeURIComponent(assetType)}/${encodeURIComponent(assetId)}`),
 };
 
+export const externalFuelApi = {
+  list: (params) => api.get(`/external-fuel-entries${toQueryString(params)}`),
+  get: (id) => api.get(`/external-fuel-entries/${id}`),
+  create: (payload) => api.post('/external-fuel-entries', payload),
+  update: (id, payload) => api.put(`/external-fuel-entries/${id}`, payload),
+  remove: (id, confirmation) => api.delete(`/external-fuel-entries/${id}`, { confirmation }),
+};
+
 export const adblueApi = {
   overview: (params) => api.get(`/adblue/overview${toQueryString(params)}`),
   reports: (params) => api.get(`/adblue/reports${toQueryString(params)}`),
@@ -414,6 +422,7 @@ export const fuelReportsApi = {
   collections: (params, options) => api.get(`/fuel-reports/collections${toQueryString(params)}`, options),
   collectionsByStation: (params, options) => api.get(`/fuel-reports/collections/by-station${toQueryString(params)}`, options),
   collectionsByCarrier: (params, options) => api.get(`/fuel-reports/collections/by-carrier${toQueryString(params)}`, options),
+  externalFuel: (params, options) => api.get(`/fuel-reports/external-fuel${toQueryString(params)}`, options),
 };
 
 export const inventoryReportsApi = {
@@ -503,4 +512,21 @@ export const tyresApi = {
   costReport: (params, options) => api.get(`/tyres/reports/costs${toQueryString(params)}`, options),
   costsByType: (params, options) => api.get(`/tyres/reports/costs/by-type${toQueryString(params)}`, options),
   costsBySupplier: (params, options) => api.get(`/tyres/reports/costs/by-supplier${toQueryString(params)}`, options),
+};
+
+export const batteriesApi = {
+  list: (params) => api.get(`/batteries${toQueryString(params)}`),
+  summary: (params) => api.get(`/batteries/summary${toQueryString(params)}`),
+  get: (id) => api.get(`/batteries/${id}`),
+  purchase: (payload) => api.post('/batteries/purchases', payload),
+  fit: (payload) => api.post('/batteries/fit', payload),
+  replace: (id, payload) => api.post(`/batteries/${id}/replace`, payload),
+  remove: (id, payload) => api.post(`/batteries/${id}/remove`, payload),
+  sendForRepair: (id, payload) => api.post(`/batteries/${id}/send-for-repair`, payload),
+  repaired: (id, payload) => api.post(`/batteries/${id}/repaired`, payload),
+  scrap: (id, payload) => api.post(`/batteries/${id}/scrap`, payload),
+  update: (id, payload) => api.put(`/batteries/${id}`, payload),
+  destroy: (id, confirmation) => api.delete(`/batteries/${id}`, { confirmation }),
+  events: (params) => api.get(`/batteries/events${toQueryString(params)}`),
+  costReport: (params) => api.get(`/batteries/reports/costs${toQueryString(params)}`),
 };
