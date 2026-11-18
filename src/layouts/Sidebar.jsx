@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import Can from '../components/Can';
+import BrandingButton from '../components/BrandingButton';
+import ThemeToggle from '../components/ThemeToggle';
 
 const linkClasses = ({ isActive }) =>
   [
@@ -54,8 +56,13 @@ export default function Sidebar({ open, onNavigate }) {
         open ? 'translate-x-0' : '-translate-x-full',
       ].join(' ')}
     >
-      <div className="flex h-16 shrink-0 items-center border-b border-white/10 px-5">
+      <div className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-white/10 px-5">
         <span className="text-lg font-bold tracking-[0.06em] text-white">VMMS</span>
+        {/* On phones these move here from the header (see Header.jsx). */}
+        <div className="flex items-center gap-1 sm:hidden">
+          <ThemeToggle tone="nav" />
+          <BrandingButton tone="nav" />
+        </div>
       </div>
 
       <nav className="flex flex-col gap-0.5 px-2.5 py-3">

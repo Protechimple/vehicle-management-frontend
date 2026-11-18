@@ -317,7 +317,7 @@ export default function PurchaseFormPage() {
                       <CellLabel htmlFor={`${rowId}-item`} required>
                         Item
                       </CellLabel>
-                      <Select id={`${rowId}-item`} aria-label={`Item ${index + 1}`} value={line.itemId} onChange={updateLine(index, 'itemId')} required showAllOnScroll>
+                      <Select id={`${rowId}-item`} aria-label={`Item ${index + 1}`} value={line.itemId} onChange={updateLine(index, 'itemId')} required>
                         <option value="">Select an item</option>
                         {items
                           .filter((it) => it.status === 'active')
