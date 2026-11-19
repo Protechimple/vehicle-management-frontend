@@ -5,7 +5,7 @@ import { Alert, Badge, Button, Input, Pagination, Select, Spinner, Table } from 
 import Can from '../../components/Can';
 import { useAuth } from '../../context/AuthContext';
 import useSiteNames from '../../hooks/useSiteNames';
-import { formatCurrency, formatDateOnly } from '../../config/tyres';
+import { formatCurrency, formatWhen } from '../../config/tyres';
 
 const PAGE_SIZE = 20;
 
@@ -66,7 +66,7 @@ export default function TyrePurchasesPage() {
 
   const columns = [
     { key: 'purchaseNumber', label: 'Purchase', sortable: true, render: (p) => <span className="font-semibold text-steel-900">{p.purchaseNumber}</span> },
-    { key: 'purchaseDate', label: 'Date', sortable: true, render: (p) => formatDateOnly(p.purchaseDate) },
+    { key: 'purchaseDate', label: 'Date & time', sortable: true, render: (p) => <span className="whitespace-nowrap">{formatWhen(p.purchaseDate, p.purchaseTime)}</span> },
     { key: 'siteName', label: 'Site', render: (p) => p.siteName ?? '—' },
     {
       key: 'supplierName',
@@ -97,7 +97,7 @@ export default function TyrePurchasesPage() {
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-steel-900">Tyre Purchases</h1>
-          <p className="mt-1 text-steel-500">Bulk tyre purchases. Saving a purchase adds its tyres to the site's stock.</p>
+          <p className="mt-1 text-steel-500">Bulk tyre purchases. Each tyre bought gets its own Tyre ID in the New Tyre Store.</p>
         </div>
         <Can resource="TYRE" action="CREATE">
           <Button as={Link} to="/tyres/purchases/new">

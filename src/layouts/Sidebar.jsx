@@ -153,14 +153,20 @@ export default function Sidebar({ open, onNavigate }) {
         </NavSection>
 
         <NavSection title="Tyres" paths={['/tyres']}>
-          <NavLink to="/tyres/stock" className={linkClasses} onClick={onNavigate}>
-            Tyre Stock
+          <NavLink to="/tyres/stores" className={linkClasses} onClick={onNavigate}>
+            Tyre Stores
           </NavLink>
           <NavLink to="/tyres/purchases" className={linkClasses} onClick={onNavigate}>
             Tyre Purchases
           </NavLink>
-          <NavLink to="/tyres/fitting" className={linkClasses} onClick={onNavigate}>
-            Tyre Fitting
+          <NavLink to="/tyres/assets" className={linkClasses} onClick={onNavigate}>
+            Vehicle Tyres
+          </NavLink>
+          <NavLink to="/tyres/transfers" className={linkClasses} onClick={onNavigate}>
+            Tyre Transfers
+          </NavLink>
+          <NavLink to="/tyres/history" className={linkClasses} onClick={onNavigate}>
+            Tyre History
           </NavLink>
           <NavLink to="/tyres/reports" className={linkClasses} onClick={onNavigate}>
             Tyre Reports

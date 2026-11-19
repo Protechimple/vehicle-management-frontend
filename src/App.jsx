@@ -31,13 +31,16 @@ import StockAdjustmentDetailPage from './pages/inventory/StockAdjustmentDetailPa
 import StockTransferFormPage from './pages/inventory/StockTransferFormPage';
 import StockTransferDetailPage from './pages/inventory/StockTransferDetailPage';
 import InventoryReportsPage from './pages/inventory/InventoryReportsPage';
-import TyreStockPage from './pages/tyres/TyreStockPage';
+import TyreStoresPage from './pages/tyres/TyreStoresPage';
+import TyreDetailPage from './pages/tyres/TyreDetailPage';
+import VehicleTyresPage from './pages/tyres/VehicleTyresPage';
 import TyrePurchasesPage from './pages/tyres/TyrePurchasesPage';
 import TyrePurchaseFormPage from './pages/tyres/TyrePurchaseFormPage';
 import TyrePurchaseDetailPage from './pages/tyres/TyrePurchaseDetailPage';
-import TyreFittingPage from './pages/tyres/TyreFittingPage';
-import TyreFitFormPage from './pages/tyres/TyreFitFormPage';
 import TyreReportsPage from './pages/tyres/TyreReportsPage';
+import TyreHistoryPage from './pages/tyres/TyreHistoryPage';
+import TyreTransfersPage from './pages/tyres/TyreTransfersPage';
+import TyreTransferFormPage from './pages/tyres/TyreTransferFormPage';
 import BatteriesPage from './pages/batteries/BatteriesPage';
 import AddBatteriesPage from './pages/batteries/AddBatteriesPage';
 import BatteryHistoryPage from './pages/batteries/BatteryHistoryPage';
@@ -218,14 +221,26 @@ export default function App() {
         <Route path="/adblue/fillings/:id/edit" element={<AdBlueFillingFormPage />} />
         <Route path="/adblue/reports" element={<AdBlueReportsPage />} />
 
-        <Route path="/tyres" element={<Navigate to="/tyres/stock" replace />} />
-        <Route path="/tyres/stock" element={<TyreStockPage />} />
+        <Route path="/tyres" element={<Navigate to="/tyres/stores" replace />} />
+        <Route path="/tyres/stores" element={<TyreStoresPage />} />
+        <Route path="/tyres/stock" element={<Navigate to="/tyres/stores" replace />} />
+        <Route path="/tyres/assets" element={<VehicleTyresPage />} />
+        <Route path="/tyres/fitting" element={<Navigate to="/tyres/assets" replace />} />
         <Route path="/tyres/purchases" element={<TyrePurchasesPage />} />
         <Route path="/tyres/purchases/new" element={<TyrePurchaseFormPage />} />
         <Route path="/tyres/purchases/:id" element={<TyrePurchaseDetailPage />} />
-        <Route path="/tyres/fitting" element={<TyreFittingPage />} />
-        <Route path="/tyres/fitting/new" element={<TyreFitFormPage />} />
         <Route path="/tyres/reports" element={<TyreReportsPage />} />
+        <Route path="/tyres/history" element={<TyreHistoryPage />} />
+        <Route path="/tyres/transfers" element={<TyreTransfersPage />} />
+        <Route
+          path="/tyres/transfers/new"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <TyreTransferFormPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/tyres/:id" element={<TyreDetailPage />} />
 
         <Route path="/batteries" element={<BatteriesPage />} />
         <Route path="/batteries/add" element={<AddBatteriesPage />} />

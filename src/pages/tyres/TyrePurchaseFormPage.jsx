@@ -5,7 +5,7 @@ import { Alert, Button, Card, Field, Input, Select } from '../../components/ui';
 import TyreTypeModal from '../../components/tyres/TyreTypeModal';
 import { useAuth } from '../../context/AuthContext';
 import useSiteNames from '../../hooks/useSiteNames';
-import { formatCurrency, todayDateOnly, tyreTypeName } from '../../config/tyres';
+import { checkDateTime, formatCurrency, nowDateTimeLocal, splitDateTime, tyreTypeName } from '../../config/tyres';
 
 const NEW_TYPE = '__new__';
 
@@ -28,7 +28,7 @@ export default function TyrePurchaseFormPage() {
   const siteNames = useSiteNames();
   const [sites, setSites] = useState([]);
   const [types, setTypes] = useState([]);
-  const [form, setForm] = useState({ siteId: '', supplierName: '', purchaseDate: todayDateOnly(), billNumber: '', notes: '' });
+  const [form, setForm] = useState({ siteId: '', supplierName: '', purchaseDate: nowDateTimeLocal(), billNumber: '', notes: '' });
   const [lines, setLines] = useState([blankLine()]);
   const [errors, setErrors] = useState({});
   const [lineErrors, setLineErrors] = useState({});
@@ -65,7 +65,7 @@ export default function TyrePurchaseFormPage() {
     event.preventDefault();
     const next = {
       siteId: isAdmin && !form.siteId ? 'Choose the site receiving these tyres.' : null,
-      purchaseDate: !form.purchaseDate ? 'Choose the purchase date.' : form.purchaseDate > todayDateOnly() ? "Purchase date can't be in the future." : null,
+      purchaseDate: checkDateTime(form.purchaseDate),
     };
     const nextLines = {};
     for (const line of lines) {
@@ -89,7 +89,8 @@ export default function TyrePurchaseFormPage() {
       const response = await tyresApi.createPurchase({
         siteId: isAdmin ? Number(form.siteId) : undefined,
         supplierName: form.supplierName.trim() || null,
-        purchaseDate: form.purchaseDate,
+        purchaseDate: splitDateTime(form.purchaseDate).date,
+        purchaseTime: splitDateTime(form.purchaseDate).time,
         billNumber: form.billNumber || null,
         notes: form.notes || null,
         items: lines.map((l) => ({
@@ -100,7 +101,7 @@ export default function TyrePurchaseFormPage() {
         })),
       });
       navigate(`/tyres/purchases/${response.data.id}`, {
-        state: { message: `${response.data.purchaseNumber} saved — ${response.data.tyreCount} tyres added to stock.` },
+        state: { message: response.message },
       });
     } catch (err) {
       setError(err.message);
@@ -118,7 +119,7 @@ export default function TyrePurchaseFormPage() {
           ← Tyre purchases
         </Link>
         <h1 className="mt-1 text-xl font-semibold text-steel-900">New tyre purchase</h1>
-        <p className="mt-1 text-steel-500">One supplier bill, many tyres. Tyres are added to the site's stock when you save.</p>
+        <p className="mt-1 text-steel-500">One supplier bill, many tyres. Each tyre gets its own Tyre ID and goes into the site's New Tyre Store.</p>
       </div>
 
       <form onSubmit={handleSubmit} noValidate>
@@ -147,9 +148,9 @@ export default function TyrePurchaseFormPage() {
                 <Input id={id} describedBy={describedBy} value={form.supplierName} onChange={update('supplierName')} maxLength={255} placeholder="e.g. Patil Tyres, Pune" autoComplete="off" />
               )}
             </Field>
-            <Field label="Purchase date" required error={errors.purchaseDate}>
+            <Field label="Purchase date & time" required error={errors.purchaseDate}>
               {({ id, invalid, describedBy }) => (
-                <Input id={id} type="date" invalid={invalid} describedBy={describedBy} value={form.purchaseDate} max={todayDateOnly()} onChange={update('purchaseDate')} />
+                <Input id={id} type="datetime-local" invalid={invalid} describedBy={describedBy} value={form.purchaseDate} max={nowDateTimeLocal()} onChange={update('purchaseDate')} />
               )}
             </Field>
             <Field label="Bill / invoice no.">{({ id }) => <Input id={id} value={form.billNumber} onChange={update('billNumber')} maxLength={64} />}</Field>
