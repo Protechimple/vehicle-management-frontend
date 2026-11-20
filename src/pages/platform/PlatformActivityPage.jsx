@@ -66,7 +66,7 @@ export default function PlatformActivityPage() {
             >
               <option value="">All organizations</option>
               {organizations.map((org) => (
-                <option key={org.tenantId} value={org.tenantId}>
+                <option key={org.tenantId} value={org.tenantId} data-added={org.createdAt}>
                   {org.organizationName}
                 </option>
               ))}

@@ -84,7 +84,7 @@ function SitePickerModal({ open, onClose, onSelect }) {
     >
       <div className="flex flex-col gap-2 sm:flex-row">
         <Input placeholder="Search by name or location..." value={search} onChange={(e) => setSearch(e.target.value)} />
-        <Select value={status} onChange={(e) => setStatus(e.target.value)} className="sm:w-40">
+        <Select value={status} onChange={(e) => setStatus(e.target.value)} className="sm:w-40 sm:shrink-0">
           {SITE_STATUS_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -294,7 +294,7 @@ export default function SiteManagementPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="sm:w-40">
+              <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="sm:w-40 sm:shrink-0">
                 {TYPE_FILTERS.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}

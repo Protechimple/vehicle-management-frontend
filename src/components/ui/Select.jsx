@@ -1,9 +1,12 @@
 import { Children, Fragment, isValidElement, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
+// Lists with more entries than this get a search box.
 const SEARCH_THRESHOLD = 5;
+// How many of the most recently added entries are listed first.
 const RECENT_COUNT = 5;
-const MAX_RESULTS = 50;
 const POPUP_HEIGHT = 320;
+const MARGIN = 8;
+const COARSE_POINTER_QUERY = '(pointer: coarse)';
 
 const fieldClasses = (invalid) =>
   [
@@ -50,10 +53,6 @@ function hasValue(value) {
 }
 
 function compareAdded(a, b) {
-  const known = [hasValue(a.added), hasValue(b.added)];
-  if (!known[0] && !known[1]) return a.index - b.index;
-  if (!known[0]) return 1;
-  if (!known[1]) return -1;
   const x = Number(a.added);
   const y = Number(b.added);
   if (!Number.isNaN(x) && !Number.isNaN(y)) return y - x || a.index - b.index;
@@ -69,26 +68,28 @@ function changeEvent(value, name, id) {
   return { target, currentTarget: target, type: 'change', preventDefault() {}, stopPropagation() {}, persist() {} };
 }
 
-function NativeSelect({ invalid = false, describedBy, className = '', children, ...props }) {
-  return (
-    <select aria-invalid={invalid || undefined} aria-describedby={describedBy} className={`${fieldClasses(invalid)} ${className}`} {...props}>
-      {children}
-    </select>
-  );
+function isTouchScreen() {
+  return typeof window.matchMedia === 'function' && window.matchMedia(COARSE_POINTER_QUERY).matches;
 }
 
-function SearchableSelect({
+function firstEnabled(list, from = 0, step = 1) {
+  for (let i = from; i >= 0 && i < list.length; i += step) if (!list[i].disabled) return i;
+  return -1;
+}
+
+function Dropdown({
   options,
+  searchable,
   id,
   name,
   value,
   onChange,
   disabled = false,
+  required = false,
   invalid = false,
   describedBy,
   className = '',
   'aria-label': ariaLabel,
-  showAllOnScroll = false,
 }) {
   const baseId = useId();
   const listId = `${baseId}-list`;
@@ -96,6 +97,7 @@ function SearchableSelect({
   const popupRef = useRef(null);
   const inputRef = useRef(null);
   const listRef = useRef(null);
+  const scrollToActive = useRef(false);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
@@ -105,88 +107,65 @@ function SearchableSelect({
   const selected = useMemo(() => options.find((o) => o.value === current) ?? null, [options, current]);
   const blanks = useMemo(() => options.filter((o) => o.value === ''), [options]);
 
-  const recentView = useMemo(() => {
-    if (!open) return null;
-    const entries = options.filter((o) => o.value !== '');
-    const dated = entries.filter((o) => hasValue(o.added));
-    if (dated.length <= RECENT_COUNT) return null;
-    return {
-      dated,
-      recent: [...dated].sort(compareAdded).slice(0, RECENT_COUNT),
-      undated: entries.filter((o) => !hasValue(o.added)),
-    };
-  }, [open, options]);
-
-  const trimmed = query.trim();
+  const trimmed = searchable ? query.trim() : '';
   const { shown, footer, dividerAt = -1 } = useMemo(() => {
     if (!open) return { shown: [], footer: null };
     const words = trimmed.toLowerCase().split(/\s+/).filter(Boolean);
     if (words.length) {
-      const found = [];
-      let total = 0;
-      for (const option of options) {
-        if (!matches(option, words)) continue;
-        total += 1;
-        if (found.length < MAX_RESULTS) found.push(option);
-      }
-      if (!total) return { shown: found, footer: `No matches for “${trimmed}”.` };
-      if (total > MAX_RESULTS) return { shown: found, footer: `Showing the first ${MAX_RESULTS} of ${total} matches. Keep typing to narrow it down.` };
-      return { shown: found, footer: null };
+      const found = options.filter((option) => matches(option, words));
+      return { shown: found, footer: found.length ? null : `No matches for “${trimmed}”.` };
     }
-    if (!recentView) return { shown: options, footer: null };
-    const { dated, recent, undated } = recentView;
-    if (showAllOnScroll) {
-      const rest = options.filter((o) => o.value !== '' && !recent.includes(o));
-      return {
-        shown: [...blanks, ...recent, ...rest],
-        dividerAt: blanks.length + recent.length,
-        footer: `The ${RECENT_COUNT} most recently added are shown first. Scroll to see all ${recent.length + rest.length}, or type to search.`,
-      };
-    }
-    const pinned = selected && hasValue(selected.added) && !recent.includes(selected) ? [selected] : [];
+    const entries = options.filter((o) => o.value !== '');
+    const dated = entries.filter((o) => hasValue(o.added));
+    if (dated.length <= RECENT_COUNT) return { shown: options, footer: null };
+    const recent = [...dated].sort(compareAdded).slice(0, RECENT_COUNT);
+    const rest = entries.filter((o) => !recent.includes(o));
     return {
-      shown: [...blanks, ...pinned, ...recent, ...undated],
-      footer:
-        dated.length > recent.length + pinned.length
-          ? `Showing the ${RECENT_COUNT} most recently added. Type to search all ${dated.length}.`
-          : null,
+      shown: [...blanks, ...recent, ...rest],
+      dividerAt: blanks.length + recent.length,
+      footer: `The ${RECENT_COUNT} most recently added are shown first. Scroll to see all ${entries.length}${searchable ? ', or type to search' : ''}.`,
     };
-  }, [open, trimmed, options, recentView, selected, blanks, showAllOnScroll]);
-
-  const firstEnabled = (list, from = 0, step = 1) => {
-    for (let i = from; i >= 0 && i < list.length; i += step) if (!list[i].disabled) return i;
-    return -1;
-  };
+  }, [open, trimmed, options, blanks, searchable]);
 
   const place = useCallback(() => {
     const trigger = triggerRef.current;
     if (!trigger) return;
     const rect = trigger.getBoundingClientRect();
-    const margin = 8;
-    const below = window.innerHeight - rect.bottom - margin;
-    const above = rect.top - margin;
+    // Measure against the visible area so an on-screen keyboard doesn't hide the list.
+    const vv = window.visualViewport;
+    const viewTop = vv ? vv.offsetTop : 0;
+    const viewBottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
+    const viewWidth = Math.min(window.innerWidth, document.documentElement.clientWidth || window.innerWidth);
+    const below = viewBottom - rect.bottom - MARGIN;
+    const above = rect.top - viewTop - MARGIN;
     const upward = below < Math.min(POPUP_HEIGHT, 220) && above > below;
-    const width = Math.min(Math.max(rect.width, 260), window.innerWidth - margin * 2);
-    const left = Math.max(margin, Math.min(rect.left, window.innerWidth - margin - width));
+    // Never wider than the screen, so it fits on phones.
+    const width = Math.min(Math.max(rect.width, searchable ? 260 : 0), viewWidth - MARGIN * 2);
+    const left = Math.max(MARGIN, Math.min(rect.left, viewWidth - MARGIN - width));
     setPosition({
       left,
       width,
-      maxHeight: Math.max(160, Math.min(POPUP_HEIGHT, upward ? above : below)),
+      maxHeight: Math.max(120, Math.min(POPUP_HEIGHT, upward ? above : below)),
       ...(upward ? { bottom: window.innerHeight - rect.top + 4 } : { top: rect.bottom + 4 }),
     });
-  }, []);
+  }, [searchable]);
 
   function openList(initialQuery = '') {
     if (disabled) return;
-    setQuery(initialQuery);
+    setQuery(searchable ? initialQuery : '');
+    scrollToActive.current = false;
     setOpen(true);
   }
 
-  function close(returnFocus = true) {
+  const dismiss = useCallback(() => {
     setOpen(false);
     setQuery('');
     setPosition(null);
-    if (returnFocus) triggerRef.current?.focus();
+  }, []);
+
+  function close(returnFocus = true) {
+    dismiss();
+    if (returnFocus) triggerRef.current?.focus({ preventScroll: true });
   }
 
   function choose(option) {
@@ -199,74 +178,107 @@ function SearchableSelect({
     if (open) place();
   }, [open, place]);
 
+  // Focus the search box on open, except on touch screens, where that would pop
+  // up the keyboard over the list. Without a search box the list takes focus so
+  // the arrow keys work.
   const placed = position !== null;
   useEffect(() => {
-    if (open && placed) inputRef.current?.focus();
+    if (!open || !placed) return;
+    const target = inputRef.current && !isTouchScreen() ? inputRef.current : listRef.current;
+    target?.focus({ preventScroll: true });
   }, [open, placed]);
 
   useEffect(() => {
     if (!open) return undefined;
     const onPointer = (event) => {
       if (triggerRef.current?.contains(event.target) || popupRef.current?.contains(event.target)) return;
-      setOpen(false);
-      setQuery('');
-      setPosition(null);
+      dismiss();
     };
     const onScroll = (event) => {
       if (popupRef.current?.contains(event.target)) return;
       place();
     };
+    const vv = window.visualViewport;
     document.addEventListener('mousedown', onPointer, true);
     document.addEventListener('touchstart', onPointer, true);
     window.addEventListener('scroll', onScroll, true);
     window.addEventListener('resize', place);
+    vv?.addEventListener('resize', place);
+    vv?.addEventListener('scroll', place);
     return () => {
       document.removeEventListener('mousedown', onPointer, true);
       document.removeEventListener('touchstart', onPointer, true);
       window.removeEventListener('scroll', onScroll, true);
       window.removeEventListener('resize', place);
+      vv?.removeEventListener('resize', place);
+      vv?.removeEventListener('scroll', place);
     };
-  }, [open, place]);
+  }, [open, place, dismiss]);
 
+  // Highlight the current value, but keep the list scrolled to the top so the
+  // latest entries are what you see first.
   useEffect(() => {
     if (!open) return;
     const selectedIndex = trimmed ? -1 : shown.findIndex((o) => o.value === current);
     setActive(selectedIndex >= 0 ? selectedIndex : Math.max(0, firstEnabled(shown)));
+    if (listRef.current) listRef.current.scrollTop = 0;
   }, [open, query]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !scrollToActive.current) return;
     listRef.current?.querySelector(`[data-index="${active}"]`)?.scrollIntoView({ block: 'nearest' });
   }, [open, active]);
+
+  function move(next) {
+    if (next < 0) return;
+    scrollToActive.current = true;
+    setActive(next);
+  }
+
+  function jumpToLetter(letter) {
+    const lower = letter.toLowerCase();
+    for (let step = 1; step <= shown.length; step += 1) {
+      const i = (active + step) % shown.length;
+      if (!shown[i].disabled && shown[i].label.toLowerCase().startsWith(lower)) return move(i);
+    }
+  }
 
   function onTriggerKeyDown(event) {
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       openList();
-    } else if (event.key.length === 1 && event.key !== ' ' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    } else if (searchable && event.key.length === 1 && event.key !== ' ' && !event.ctrlKey && !event.metaKey && !event.altKey) {
       event.preventDefault();
       openList(event.key);
     }
   }
 
-  function onSearchKeyDown(event) {
+  function onPopupKeyDown(event) {
+    const onList = event.target === listRef.current;
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      const next = firstEnabled(shown, active + 1, 1);
-      if (next >= 0) setActive(next);
+      move(firstEnabled(shown, active + 1, 1));
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
-      const previous = firstEnabled(shown, active - 1, -1);
-      if (previous >= 0) setActive(previous);
-    } else if (event.key === 'Enter') {
+      move(firstEnabled(shown, active - 1, -1));
+    } else if (event.key === 'Enter' || (event.key === ' ' && onList)) {
       event.preventDefault();
       choose(shown[active]);
     } else if (event.key === 'Escape') {
+      // preventDefault also stops an enclosing <dialog> from closing.
       event.preventDefault();
       event.stopPropagation();
       close();
     } else if (event.key === 'Tab') {
       close(false);
+    } else if (onList && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      if (searchable) {
+        event.preventDefault();
+        setQuery(event.key);
+        inputRef.current?.focus();
+      } else {
+        jumpToLetter(event.key);
+      }
     }
   }
 
@@ -277,7 +289,6 @@ function SearchableSelect({
       <button
         ref={triggerRef}
         id={id}
-        name={name}
         type="button"
         disabled={disabled}
         aria-label={ariaLabel}
@@ -285,6 +296,7 @@ function SearchableSelect({
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
         aria-invalid={invalid || undefined}
+        aria-required={required || undefined}
         aria-describedby={describedBy}
         onClick={() => (open ? close() : openList())}
         onKeyDown={onTriggerKeyDown}
@@ -296,9 +308,26 @@ function SearchableSelect({
         </svg>
       </button>
 
+      {(required || name) && (
+        // Stand-in for the native <select> so `required` validation and form
+        // submission keep working. Focus is handed straight to the button.
+        <input
+          tabIndex={-1}
+          aria-hidden="true"
+          name={name}
+          required={required}
+          disabled={disabled}
+          value={current}
+          onChange={() => {}}
+          onFocus={() => triggerRef.current?.focus()}
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px w-full opacity-0"
+        />
+      )}
+
       {open && (
         <div
           ref={popupRef}
+          onKeyDown={onPopupKeyDown}
           style={
             position
               ? { position: 'fixed', left: position.left, width: position.width, top: position.top, bottom: position.bottom, maxHeight: position.maxHeight }
@@ -306,25 +335,35 @@ function SearchableSelect({
           }
           className="z-50 flex flex-col overflow-hidden rounded border border-steel-200 bg-surface shadow-lg"
         >
-          <div className="border-b border-steel-100 p-2">
-            <input
-              ref={inputRef}
-              type="text"
-              role="combobox"
-              aria-label={`Search ${ariaLabel ?? 'options'}`}
-              aria-expanded="true"
-              aria-controls={listId}
-              aria-autocomplete="list"
-              aria-activedescendant={activeOption ? `${baseId}-option-${active}` : undefined}
-              autoComplete="off"
-              placeholder="Type to search…"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              onKeyDown={onSearchKeyDown}
-              className="w-full rounded border border-steel-200 px-2.5 py-1.5 text-sm text-steel-900 placeholder:text-steel-300 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/25 focus:outline-none"
-            />
-          </div>
-          <ul ref={listRef} id={listId} role="listbox" className="min-h-0 flex-1 overflow-y-auto py-1">
+          {searchable && (
+            <div className="border-b border-steel-100 p-2">
+              <input
+                ref={inputRef}
+                type="text"
+                role="combobox"
+                aria-label={`Search ${ariaLabel ?? 'options'}`}
+                aria-expanded="true"
+                aria-controls={listId}
+                aria-autocomplete="list"
+                aria-activedescendant={activeOption ? `${baseId}-option-${active}` : undefined}
+                autoComplete="off"
+                placeholder="Type to search…"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                // 16px on phones so iOS doesn't zoom the page when it's focused.
+                className="w-full rounded border border-steel-200 px-2.5 py-1.5 text-base text-steel-900 placeholder:text-steel-300 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/25 focus:outline-none sm:text-sm"
+              />
+            </div>
+          )}
+          <ul
+            ref={listRef}
+            id={listId}
+            role="listbox"
+            tabIndex={-1}
+            aria-label={ariaLabel}
+            aria-activedescendant={!searchable && activeOption ? `${baseId}-option-${active}` : undefined}
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-1 focus:outline-none"
+          >
             {shown.map((option, index) => {
               const isSelected = option.value === current;
               const isActive = index === active;
@@ -358,11 +397,17 @@ function SearchableSelect({
   );
 }
 
-export default function Select({ searchable, showAllOnScroll, ...props }) {
-  const options = collectOptions(props.children);
+/**
+ * Drop-in replacement for <select>: pass <option> children as usual.
+ *
+ * Give record-backed options `data-added` (an id or timestamp that grows with
+ * each new record) and the 5 most recent are listed first, followed by every
+ * entry in a scrollable list. Record-backed lists and lists with more than 5
+ * entries get a search box; `searchable` overrides that.
+ */
+export default function Select({ searchable, children, ...props }) {
+  const options = collectOptions(children);
   const fromRecords = options.some((o) => hasValue(o.added));
   const entryCount = options.filter((o) => o.value !== '').length;
-  const useSearch = searchable ?? (fromRecords || entryCount > SEARCH_THRESHOLD);
-  if (useSearch) return <SearchableSelect {...props} options={options} showAllOnScroll={showAllOnScroll} />;
-  return <NativeSelect {...props} />;
+  return <Dropdown {...props} options={options} searchable={searchable ?? (fromRecords || entryCount > SEARCH_THRESHOLD)} />;
 }

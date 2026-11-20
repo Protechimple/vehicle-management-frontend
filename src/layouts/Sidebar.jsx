@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import Can from '../components/Can';
+import BrandingButton from '../components/BrandingButton';
+import ThemeToggle from '../components/ThemeToggle';
 
 const linkClasses = ({ isActive }) =>
   [
@@ -54,8 +56,13 @@ export default function Sidebar({ open, onNavigate }) {
         open ? 'translate-x-0' : '-translate-x-full',
       ].join(' ')}
     >
-      <div className="flex h-16 shrink-0 items-center border-b border-white/10 px-5">
+      <div className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-white/10 px-5">
         <span className="text-lg font-bold tracking-[0.06em] text-white">VMMS</span>
+        {/* On phones these move here from the header (see Header.jsx). */}
+        <div className="flex items-center gap-1 sm:hidden">
+          <ThemeToggle tone="nav" />
+          <BrandingButton tone="nav" />
+        </div>
       </div>
 
       <nav className="flex flex-col gap-0.5 px-2.5 py-3">
@@ -146,14 +153,20 @@ export default function Sidebar({ open, onNavigate }) {
         </NavSection>
 
         <NavSection title="Tyres" paths={['/tyres']}>
-          <NavLink to="/tyres/stock" className={linkClasses} onClick={onNavigate}>
-            Tyre Stock
+          <NavLink to="/tyres/stores" className={linkClasses} onClick={onNavigate}>
+            Tyre Stores
           </NavLink>
           <NavLink to="/tyres/purchases" className={linkClasses} onClick={onNavigate}>
             Tyre Purchases
           </NavLink>
-          <NavLink to="/tyres/fitting" className={linkClasses} onClick={onNavigate}>
-            Tyre Fitting
+          <NavLink to="/tyres/assets" className={linkClasses} onClick={onNavigate}>
+            Vehicle Tyres
+          </NavLink>
+          <NavLink to="/tyres/transfers" className={linkClasses} onClick={onNavigate}>
+            Tyre Transfers
+          </NavLink>
+          <NavLink to="/tyres/history" className={linkClasses} onClick={onNavigate}>
+            Tyre History
           </NavLink>
           <NavLink to="/tyres/reports" className={linkClasses} onClick={onNavigate}>
             Tyre Reports

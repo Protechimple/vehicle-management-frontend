@@ -4,7 +4,8 @@ export default function Input({ invalid = false, describedBy, className = '', ..
       aria-invalid={invalid || undefined}
       aria-describedby={describedBy}
       className={[
-        'w-full rounded border px-3 py-1.5 text-sm text-steel-900',
+        // 16px on phones so iOS doesn't zoom the page when a search box is focused.
+        'w-full rounded border px-3 py-1.5 text-base text-steel-900 sm:text-sm',
         'placeholder:text-steel-300 focus:outline-none focus:ring-2',
         'disabled:cursor-not-allowed disabled:bg-steel-50',
         invalid

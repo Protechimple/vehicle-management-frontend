@@ -152,7 +152,7 @@ export default function DashboardPage() {
             <Select searchable aria-label="Site for compliance and running cost" value={siteId} onChange={(e) => setSiteId(e.target.value)}>
               <option value="">All sites</option>
               {siteOptions.map(([id, name]) => (
-                <option key={id} value={id}>
+                <option key={id} value={id} data-added={id}>
                   {name}
                 </option>
               ))}

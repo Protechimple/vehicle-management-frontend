@@ -117,7 +117,7 @@ function ScheduleCard({ subtitle, assetType, noun, refreshKey, siteNames, onSche
     <Card
       subtitle={subtitle}
       actions={
-        <div className="w-56">
+        <div className="w-56 max-w-full">
           <Select value={view} onChange={changeView} aria-label={`Which ${noun} to show`}>
             <option value="attention">Overdue and due soon</option>
             <option value="all">All scheduled {noun}</option>
