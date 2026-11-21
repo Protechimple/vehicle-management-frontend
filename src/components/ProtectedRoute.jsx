@@ -3,8 +3,10 @@ import { useAuth } from '../context/AuthContext';
 
 export const CHANGE_PASSWORD_PATH = '/change-password';
 
-export default function ProtectedRoute({ allowedRoles, children }) {
-  const { isAuthenticated, role, sessionExpired, previousUserId, mustChangePassword } = useAuth();
+// anyOf: [[resource, action], ...] — the screen opens if the user may do at least one of them.
+// allOf: the same, but every one is needed (a report needs its module and Reports).
+export default function ProtectedRoute({ allowedRoles, anyOf, allOf, children }) {
+  const { isAuthenticated, role, can, sessionExpired, previousUserId, mustChangePassword } = useAuth();
   const location = useLocation();
 
   if (!isAuthenticated) {
@@ -18,6 +20,10 @@ export default function ProtectedRoute({ allowedRoles, children }) {
   }
 
   if (allowedRoles && !allowedRoles.includes(role)) {
+    return <Navigate to="/forbidden" replace />;
+  }
+
+  if ((anyOf && !anyOf.some(([resource, action]) => can(resource, action))) || (allOf && !allOf.every(([resource, action]) => can(resource, action)))) {
     return <Navigate to="/forbidden" replace />;
   }
 

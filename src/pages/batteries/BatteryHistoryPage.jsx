@@ -50,8 +50,10 @@ function Totals({ totals }) {
 }
 
 export default function BatteryHistoryPage() {
-  const { role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, canPickSite, can } = useAuth();
+  const canSeeCosts = can('REPORTS', 'VIEW');
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
   const [filters, setFilters] = useState({ search: '', eventType: '', dateFrom: '', dateTo: '', siteId: '', page: 1 });
   const [result, setResult] = useState(null);
@@ -64,14 +66,15 @@ export default function BatteryHistoryPage() {
     try {
       const [events, costs] = await Promise.all([
         batteriesApi.events({ ...range, search: active.search || undefined, eventType: active.eventType || undefined, page: active.page }),
-        batteriesApi.costReport(range),
+        // Cost totals are a report, so they need Reports access too.
+        canSeeCosts ? batteriesApi.costReport(range) : null,
       ]);
       setResult(events);
-      setTotals(costs.data.totals);
+      setTotals(costs?.data.totals ?? null);
     } catch (err) {
       setError(err.message);
     }
-  }, []);
+  }, [canSeeCosts]);
 
   useEffect(() => {
     const timer = setTimeout(() => load(filters), 250);
@@ -131,7 +134,7 @@ export default function BatteryHistoryPage() {
         </Select>
         <Input type="date" aria-label="From date" title="From date" value={filters.dateFrom} max={filters.dateTo || todayDateOnly()} onChange={setFilter('dateFrom')} />
         <Input type="date" aria-label="To date" title="To date" value={filters.dateTo} min={filters.dateFrom || undefined} max={todayDateOnly()} onChange={setFilter('dateTo')} />
-        {isAdmin && (
+        {picksSite && (
           <Select aria-label="Site" value={filters.siteId} onChange={setFilter('siteId')}>
             <option value="">All sites</option>
             {Object.entries(siteNames).map(([siteId, name]) => (

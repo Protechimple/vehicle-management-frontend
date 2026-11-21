@@ -55,8 +55,9 @@ function WhereNow({ row }) {
 export default function BatteriesPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
   const [filters, setFilters] = useState({ status: location.state?.status ?? '', search: '', siteId: '', page: 1 });
   const [result, setResult] = useState(null);
@@ -144,9 +145,9 @@ export default function BatteriesPage() {
 
       <StatusTabs active={filters.status} counts={counts} onChange={(status) => setFilter('status', status)} />
 
-      <div className={`mb-4 grid gap-3 ${isAdmin ? 'sm:grid-cols-2 lg:max-w-3xl' : 'sm:max-w-md'}`}>
+      <div className={`mb-4 grid gap-3 ${picksSite ? 'sm:grid-cols-2 lg:max-w-3xl' : 'sm:max-w-md'}`}>
         <Input placeholder="Search battery no., serial, brand or vehicle no." value={filters.search} onChange={(e) => setFilter('search', e.target.value)} />
-        {isAdmin && (
+        {picksSite && (
           <Select aria-label="Site" value={filters.siteId} onChange={(e) => setFilter('siteId', e.target.value)}>
             <option value="">All sites</option>
             {Object.entries(siteNames).map(([siteId, name]) => (

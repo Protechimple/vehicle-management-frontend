@@ -42,14 +42,14 @@ const dateTime = (value) => new Date(value).toLocaleString(undefined, { dateStyl
 
 const PAGE_SIZE = 20;
 
-function filterColumns(tab, isAdmin) {
-  if (tab === 'transactions') return isAdmin ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-3';
-  return isAdmin ? 'sm:grid-cols-3' : 'sm:grid-cols-2';
+function filterColumns(tab, picksSite) {
+  if (tab === 'transactions') return picksSite ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-3';
+  return picksSite ? 'sm:grid-cols-3' : 'sm:grid-cols-2';
 }
 
-function listParams(active, isAdmin) {
+function listParams(active, picksSite) {
   return {
-    siteId: isAdmin ? active.siteId || undefined : undefined,
+    siteId: picksSite ? active.siteId || undefined : undefined,
     itemId: active.itemId || undefined,
   };
 }
@@ -210,8 +210,9 @@ function ListPagination({ pagination, onPageChange }) {
 }
 
 export default function StockPage() {
-  const { role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
 
   const [tab, setTab] = useState('balances');
   const [filters, setFilters] = useState({ siteId: '', itemId: '', transactionType: '', assetSearch: '' });
@@ -227,13 +228,13 @@ export default function StockPage() {
 
   useEffect(() => {
     listAll(itemsApi.list).then((r) => setItems(r.data)).catch(() => setItems([]));
-    if (isAdmin) listAll(sitesApi.list).then((r) => setSites(r.data)).catch(() => setSites([]));
-  }, [isAdmin]);
+    if (picksSite) listAll(sitesApi.list).then((r) => setSites(r.data)).catch(() => setSites([]));
+  }, [picksSite]);
 
   useEffect(() => {
     let cancelled = false;
     setError(null);
-    const params = { ...listParams(filters, isAdmin), page: pages[tab], limit: PAGE_SIZE };
+    const params = { ...listParams(filters, picksSite), page: pages[tab], limit: PAGE_SIZE };
     if (tab === 'balances') {
       setBalances(null);
       stockApi
@@ -250,7 +251,7 @@ export default function StockPage() {
     return () => {
       cancelled = true;
     };
-  }, [tab, filters, pages, isAdmin]);
+  }, [tab, filters, pages, picksSite]);
 
   const typedAssetSearch = assetSearchText.trim();
   useEffect(() => {
@@ -319,7 +320,7 @@ export default function StockPage() {
 
   function appliedFilters() {
     const applied = [];
-    if (isAdmin && filters.siteId) applied.push({ label: 'Site', value: siteNames[filters.siteId] ?? filters.siteId });
+    if (picksSite && filters.siteId) applied.push({ label: 'Site', value: siteNames[filters.siteId] ?? filters.siteId });
     if (filters.itemId) applied.push({ label: 'Item', value: items.find((i) => String(i.id) === filters.itemId)?.itemName ?? filters.itemId });
     if (tab === 'transactions' && filters.transactionType) applied.push({ label: 'Type', value: transactionTypeLabel(filters.transactionType) });
     if (tab === 'transactions' && filters.assetSearch) applied.push({ label: 'Asset', value: filters.assetSearch });
@@ -327,7 +328,7 @@ export default function StockPage() {
   }
 
   async function buildPrintReport() {
-    const params = listParams(filters, isAdmin);
+    const params = listParams(filters, picksSite);
 
     if (tab === 'balances') {
       const { data } = await listAll(stockApi.balances, params);
@@ -402,7 +403,7 @@ export default function StockPage() {
         <div>
           <h1 className="text-xl font-semibold text-steel-900">Stock</h1>
           <p className="mt-1 text-steel-500">
-            {isAdmin ? 'Current stock and the full movement ledger, across every site.' : 'Current stock and the full movement ledger at your site.'}{' '}
+            {role === 'admin' ? 'Current stock and the full movement ledger, across every site.' : picksSite ? 'Current stock and the full movement ledger across your sites.' : 'Current stock and the full movement ledger at your site.'}{' '}
             All prices, costs and values include tax.
           </p>
         </div>
@@ -419,8 +420,8 @@ export default function StockPage() {
 
       {error && <Alert tone="error">{error}</Alert>}
 
-      <div className={`mb-4 grid gap-3 ${filterColumns(tab, isAdmin)}`}>
-        {isAdmin && (
+      <div className={`mb-4 grid gap-3 ${filterColumns(tab, picksSite)}`}>
+        {picksSite && (
           <Select value={filters.siteId} onChange={(e) => updateFilter('siteId', e.target.value)}>
             <option value="">All sites</option>
             {sites.map((site) => (

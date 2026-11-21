@@ -385,8 +385,9 @@ const LOADERS = {
 };
 
 export default function FuelReportsPage() {
-  const { role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
   const [tab, setTab] = useState('register');
   const [filters, setFilters] = useState({ dateFrom: firstOfMonthDateOnly(), dateTo: todayDateOnly(), siteId: '' });
@@ -433,7 +434,7 @@ export default function FuelReportsPage() {
           min={filters.dateFrom || undefined}
           onChange={(e) => setFilters((f) => ({ ...f, dateTo: e.target.value }))}
         />
-        {isAdmin && (
+        {picksSite && (
           <Select value={filters.siteId} onChange={(e) => setFilters((f) => ({ ...f, siteId: e.target.value }))}>
             <option value="">All sites</option>
             {Object.entries(siteNames).map(([siteId, name]) => (

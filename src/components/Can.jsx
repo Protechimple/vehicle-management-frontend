@@ -1,11 +1,12 @@
 import { useAuth } from '../context/AuthContext';
-import { hasPermission } from '../config/permissions';
 
-export default function Can({ resource, action, roles, fallback = null, children }) {
-  const { role } = useAuth();
+// Shows its children only when the signed-in user may do this. anyOf: [[resource, action], ...] passes if one does.
+export default function Can({ resource, action, anyOf, roles, fallback = null, children }) {
+  const { role, can } = useAuth();
 
-  if (roles) return roles.includes(role) ? children : fallback;
-  if (resource && action) return hasPermission(role, resource, action) ? children : fallback;
+  if (roles && !roles.includes(role)) return fallback;
+  if (resource && action && !can(resource, action)) return fallback;
+  if (anyOf && !anyOf.some(([r, a]) => can(r, a))) return fallback;
 
   return children;
 }

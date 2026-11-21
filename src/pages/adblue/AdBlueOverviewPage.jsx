@@ -43,8 +43,9 @@ const columns = [
 ];
 
 export default function AdBlueOverviewPage() {
-  const { role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
   const [siteId, setSiteId] = useState('');
   const [data, setData] = useState(null);
@@ -68,7 +69,7 @@ export default function AdBlueOverviewPage() {
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-steel-900">AdBlue Overview</h1>
-          <p className="mt-1 text-steel-500">{isAdmin ? 'AdBlue purchased, consumed and remaining at every site.' : 'AdBlue purchased, consumed and remaining at your site.'}</p>
+          <p className="mt-1 text-steel-500">{role === 'admin' ? 'AdBlue purchased, consumed and remaining at every site.' : picksSite ? 'AdBlue purchased, consumed and remaining at your sites.' : 'AdBlue purchased, consumed and remaining at your site.'}</p>
         </div>
         <Can resource="ADBLUE" action="CREATE">
           <div className="flex flex-wrap gap-2">
@@ -82,7 +83,7 @@ export default function AdBlueOverviewPage() {
         </Can>
       </div>
 
-      {isAdmin && (
+      {picksSite && (
         <div className="mb-4 sm:max-w-xs">
           <Select value={siteId} onChange={(e) => setSiteId(e.target.value)}>
             <option value="">All sites</option>

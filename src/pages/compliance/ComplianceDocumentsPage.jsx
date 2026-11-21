@@ -67,8 +67,9 @@ function RemainingCell({ doc }) {
 
 export default function ComplianceDocumentsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
 
   const assetFilter = searchParams.get('assetId')
@@ -82,7 +83,7 @@ export default function ComplianceDocumentsPage() {
     expiry: EXPIRY_FILTER_VALUES.includes(initialExpiry) ? initialExpiry : assetFilter ? '' : 'ATTENTION',
     docType: DOC_TYPE_OPTIONS.some((o) => o.value === initialDocType) ? initialDocType : '',
     assetType: '',
-    siteId: isAdmin ? searchParams.get('siteId') ?? '' : '',
+    siteId: picksSite ? searchParams.get('siteId') ?? '' : '',
     page: 1,
     sort: 'expiryDate:asc',
   });
@@ -219,7 +220,7 @@ export default function ComplianceDocumentsPage() {
         </div>
       )}
 
-      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${isAdmin ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
+      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${picksSite ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
         <Input
           placeholder="Search asset, registration, RCPL or number..."
           value={filters.search}
@@ -251,7 +252,7 @@ export default function ComplianceDocumentsPage() {
           <option value="VEHICLE">Vehicles</option>
           <option value="MACHINERY">Machinery</option>
         </Select>
-        {isAdmin && (
+        {picksSite && (
           <Select value={filters.siteId} onChange={(e) => updateFilter('siteId', e.target.value)} aria-label="Site">
             <option value="">All sites</option>
             {Object.entries(siteNames).map(([siteId, name]) => (

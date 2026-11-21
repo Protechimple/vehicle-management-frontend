@@ -1,8 +1,26 @@
 export const ROLES = Object.freeze({
   ADMIN: 'admin',
+  SITE_MANAGER: 'site_manager',
   SUPERVISOR: 'supervisor',
+  INVENTORY_SUPERVISOR: 'inventory_supervisor',
 });
 
+export const ROLE_LABELS = Object.freeze({
+  admin: 'Admin',
+  site_manager: 'Site Manager',
+  supervisor: 'Supervisor',
+  inventory_supervisor: 'Inventory Supervisor',
+});
+
+// The roles an Admin creates logins for. Each may be given one site or several.
+export const MEMBER_ROLES = Object.freeze([ROLES.SITE_MANAGER, ROLES.SUPERVISOR, ROLES.INVENTORY_SUPERVISOR]);
+export const MULTI_SITE_ROLES = MEMBER_ROLES;
+
+export function roleLabel(role) {
+  return ROLE_LABELS[role] ?? role;
+}
+
+// The built-in rules, used only until the server has sent this user's own permissions.
 const BOTH = [ROLES.ADMIN, ROLES.SUPERVISOR];
 const ADMIN_ONLY = [ROLES.ADMIN];
 
@@ -56,4 +74,12 @@ export const PERMISSIONS = Object.freeze({
 export function hasPermission(role, resource, action) {
   const allowed = PERMISSIONS[resource]?.[action];
   return Array.isArray(allowed) && allowed.includes(role);
+}
+
+// What this user may do. The server sends the full list at sign-in and on every refresh, including the Admin's
+// per-role and per-user choices, so this is what decides which screens and buttons appear.
+export function userCan(user, resource, action) {
+  if (!user) return false;
+  if (Array.isArray(user.permissions)) return user.permissions.includes(`${resource}:${action}`);
+  return hasPermission(user.role, resource, action);
 }

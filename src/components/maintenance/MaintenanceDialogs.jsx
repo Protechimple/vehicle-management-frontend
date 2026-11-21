@@ -3,7 +3,6 @@ import { machineryApi, maintenanceApi, vehiclesApi, listAll } from '../../api/cl
 import { Alert, Button, Field, Input, Modal, Select } from '../ui';
 import DeleteWordModal from '../DeleteWordModal';
 import { useAuth } from '../../context/AuthContext';
-import { hasPermission } from '../../config/permissions';
 import { assetDisplayName, formatNumber, meterTypeForAsset, meterUnitLabel } from '../../config/fuel';
 import {
   MAINTENANCE_TYPE,
@@ -322,8 +321,8 @@ function StageModal({ kind, record, onClose, onDone }) {
   const resolving = kind === 'resolve';
   const isPreventive = record.type === 'preventive';
   const needsMeter = resolving && isPreventive;
-  const { role } = useAuth();
-  const canCorrectCost = hasPermission(role, 'MAINTENANCE', 'UPDATE_COST');
+  const { can } = useAuth();
+  const canCorrectCost = can('MAINTENANCE', 'UPDATE_COST');
   const lockedCosts = { labourCost: !canCorrectCost && record.labourCost != null, totalCost: !canCorrectCost && record.totalCost != null };
   const unit = meterUnitLabel(record.meterType);
 

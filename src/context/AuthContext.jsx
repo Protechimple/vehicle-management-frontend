@@ -1,6 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { authApi, PASSWORD_CHANGE_REQUIRED_EVENT, SESSION_EXPIRED_EVENT } from '../api/client';
 import { readSession, writeSession, clearSession } from '../api/session';
+import { ROLES, userCan } from '../config/permissions';
+
+const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
 const AuthContext = createContext(null);
 
@@ -62,6 +65,39 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener(PASSWORD_CHANGE_REQUIRED_EVENT, handlePasswordChangeRequired);
   }, []);
 
+  // The Admin may change someone's sites or access while they are signed in, so the session is refreshed when the app
+  // opens, when the tab comes back into view, and every few minutes.
+  const hasSession = Boolean(session?.token);
+  useEffect(() => {
+    if (!hasSession) return undefined;
+    let cancelled = false;
+
+    async function refresh() {
+      try {
+        const { data } = await authApi.me();
+        if (cancelled || !data?.user) return;
+        setSession((current) => {
+          if (!current?.token) return current;
+          const next = { ...current, user: { ...current.user, ...data.user }, organization: data.organization ?? current.organization };
+          writeSession(next);
+          return next;
+        });
+      } catch {
+        // A rejected session is handled by the session-expired event; anything else keeps what we have.
+      }
+    }
+
+    refresh();
+    const onVisible = () => document.visibilityState === 'visible' && refresh();
+    document.addEventListener('visibilitychange', onVisible);
+    const timer = setInterval(refresh, REFRESH_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      document.removeEventListener('visibilitychange', onVisible);
+      clearInterval(timer);
+    };
+  }, [hasSession]);
+
   const logIn = useCallback(
     async (credentials) => startSession((await authApi.logIn(credentials)).data),
     [startSession]
@@ -76,11 +112,20 @@ export function AuthProvider({ children }) {
     endSession();
   }, [endSession]);
 
-  const value = useMemo(
-    () => ({
-      user: session?.user ?? null,
+  const value = useMemo(() => {
+    const user = session?.user ?? null;
+    const role = user?.role ?? null;
+    // null for the Admin (every site); otherwise the sites this user covers.
+    const siteIds = role === ROLES.ADMIN ? null : (user?.siteIds ?? (user?.siteId ? [user.siteId] : []));
+    return {
+      user,
       organization: session?.organization ?? null,
-      role: session?.user?.role ?? null,
+      role,
+      siteIds,
+      isAdmin: role === ROLES.ADMIN,
+      // Admins and multi-site users choose a site on forms and filters; everyone else always works at their one site.
+      canPickSite: role === ROLES.ADMIN || (siteIds?.length ?? 0) > 1,
+      can: (resource, action) => userCan(user, resource, action),
       isAuthenticated: Boolean(session?.token),
       sessionExpired,
       previousUserId,
@@ -88,9 +133,8 @@ export function AuthProvider({ children }) {
       logIn,
       logOut,
       updateSession,
-    }),
-    [session, sessionExpired, previousUserId, logIn, logOut, updateSession]
-  );
+    };
+  }, [session, sessionExpired, previousUserId, logIn, logOut, updateSession]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
