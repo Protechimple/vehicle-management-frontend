@@ -11,6 +11,9 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import DashboardPage from './pages/DashboardPage';
 import UsersPage from './pages/UsersPage';
+import AccessPage from './pages/AccessPage';
+import TeamPage from './pages/TeamPage';
+import ProfilePage from './pages/ProfilePage';
 import VehiclesListPage from './pages/VehiclesListPage';
 import VehicleFormPage from './pages/VehicleFormPage';
 import VehicleDetailPage from './pages/VehicleDetailPage';
@@ -127,6 +130,7 @@ export default function App() {
         }
       >
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route
           path="/users"
           element={
@@ -135,14 +139,23 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/vehicles" element={<VehiclesListPage />} />
-        <Route path="/vehicles/new" element={<VehicleFormPage />} />
-        <Route path="/vehicles/:id" element={<VehicleDetailPage />} />
-        <Route path="/vehicles/:id/edit" element={<VehicleFormPage />} />
-        <Route path="/machinery" element={<MachineryListPage />} />
-        <Route path="/machinery/new" element={<MachineryFormPage />} />
-        <Route path="/machinery/:id" element={<MachineryDetailPage />} />
-        <Route path="/machinery/:id/edit" element={<MachineryFormPage />} />
+        <Route
+          path="/access"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AccessPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/team" element={<ProtectedRoute anyOf={[['USERS', 'VIEW_TEAM']]}><TeamPage /></ProtectedRoute>} />
+        <Route path="/vehicles" element={<ProtectedRoute anyOf={[['VEHICLE', 'READ']]}><VehiclesListPage /></ProtectedRoute>} />
+        <Route path="/vehicles/new" element={<ProtectedRoute anyOf={[['VEHICLE', 'CREATE']]}><VehicleFormPage /></ProtectedRoute>} />
+        <Route path="/vehicles/:id" element={<ProtectedRoute anyOf={[['VEHICLE', 'READ']]}><VehicleDetailPage /></ProtectedRoute>} />
+        <Route path="/vehicles/:id/edit" element={<ProtectedRoute anyOf={[['VEHICLE', 'UPDATE']]}><VehicleFormPage /></ProtectedRoute>} />
+        <Route path="/machinery" element={<ProtectedRoute anyOf={[['MACHINERY', 'READ']]}><MachineryListPage /></ProtectedRoute>} />
+        <Route path="/machinery/new" element={<ProtectedRoute anyOf={[['MACHINERY', 'CREATE']]}><MachineryFormPage /></ProtectedRoute>} />
+        <Route path="/machinery/:id" element={<ProtectedRoute anyOf={[['MACHINERY', 'READ']]}><MachineryDetailPage /></ProtectedRoute>} />
+        <Route path="/machinery/:id/edit" element={<ProtectedRoute anyOf={[['MACHINERY', 'UPDATE']]}><MachineryFormPage /></ProtectedRoute>} />
         <Route
           path="/sites"
           element={
@@ -151,32 +164,32 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/site-management" element={<SiteManagementPage />} />
+        <Route path="/site-management" element={<ProtectedRoute anyOf={[['VEHICLE', 'READ'], ['MACHINERY', 'READ']]}><SiteManagementPage /></ProtectedRoute>} />
 
         <Route path="/maintenance" element={<Navigate to="/maintenance/preventive" replace />} />
-        <Route path="/maintenance/preventive" element={<PreventiveMaintenancePage />} />
-        <Route path="/maintenance/breakdowns" element={<BreakdownMaintenancePage />} />
-        <Route path="/maintenance/history" element={<MaintenanceHistoryPage />} />
+        <Route path="/maintenance/preventive" element={<ProtectedRoute anyOf={[['MAINTENANCE', 'READ']]}><PreventiveMaintenancePage /></ProtectedRoute>} />
+        <Route path="/maintenance/breakdowns" element={<ProtectedRoute anyOf={[['MAINTENANCE', 'READ']]}><BreakdownMaintenancePage /></ProtectedRoute>} />
+        <Route path="/maintenance/history" element={<ProtectedRoute anyOf={[['MAINTENANCE', 'READ']]}><MaintenanceHistoryPage /></ProtectedRoute>} />
 
-        <Route path="/compliance" element={<ComplianceDocumentsPage />} />
+        <Route path="/compliance" element={<ProtectedRoute anyOf={[['COMPLIANCE', 'READ']]}><ComplianceDocumentsPage /></ProtectedRoute>} />
 
-        <Route path="/inventory/catalog" element={<ItemCatalogPage />} />
+        <Route path="/inventory/catalog" element={<ProtectedRoute anyOf={[['ITEM', 'READ'], ['ITEM_CATEGORY', 'READ'], ['UOM', 'READ'], ['SUPPLIER', 'READ']]}><ItemCatalogPage /></ProtectedRoute>} />
 
-        <Route path="/inventory/stock" element={<StockPage />} />
+        <Route path="/inventory/stock" element={<ProtectedRoute anyOf={[['STOCK', 'READ']]}><StockPage /></ProtectedRoute>} />
 
-        <Route path="/inventory/movements" element={<StockMovementsPage />} />
-        <Route path="/inventory/reports" element={<InventoryReportsPage />} />
-        <Route path="/inventory/purchases/new" element={<PurchaseFormPage />} />
-        <Route path="/inventory/purchases/:id" element={<PurchaseDetailPage />} />
-        <Route path="/inventory/purchases/:id/edit" element={<PurchaseFormPage />} />
-        <Route path="/inventory/asset-issues/new" element={<AssetIssueFormPage />} />
-        <Route path="/inventory/asset-issues/:id" element={<AssetIssueDetailPage />} />
-        <Route path="/inventory/stock-adjustments/new" element={<StockAdjustmentFormPage />} />
-        <Route path="/inventory/stock-adjustments/:id" element={<StockAdjustmentDetailPage />} />
+        <Route path="/inventory/movements" element={<ProtectedRoute anyOf={[['PURCHASE', 'READ'], ['ASSET_ISSUE', 'READ'], ['STOCK_ADJUSTMENT', 'READ'], ['STOCK_TRANSFER', 'READ']]}><StockMovementsPage /></ProtectedRoute>} />
+        <Route path="/inventory/reports" element={<ProtectedRoute allOf={[['STOCK', 'READ'], ['REPORTS', 'VIEW']]}><InventoryReportsPage /></ProtectedRoute>} />
+        <Route path="/inventory/purchases/new" element={<ProtectedRoute anyOf={[['PURCHASE', 'CREATE']]}><PurchaseFormPage /></ProtectedRoute>} />
+        <Route path="/inventory/purchases/:id" element={<ProtectedRoute anyOf={[['PURCHASE', 'READ']]}><PurchaseDetailPage /></ProtectedRoute>} />
+        <Route path="/inventory/purchases/:id/edit" element={<ProtectedRoute anyOf={[['PURCHASE', 'UPDATE']]}><PurchaseFormPage /></ProtectedRoute>} />
+        <Route path="/inventory/asset-issues/new" element={<ProtectedRoute anyOf={[['ASSET_ISSUE', 'CREATE']]}><AssetIssueFormPage /></ProtectedRoute>} />
+        <Route path="/inventory/asset-issues/:id" element={<ProtectedRoute anyOf={[['ASSET_ISSUE', 'READ']]}><AssetIssueDetailPage /></ProtectedRoute>} />
+        <Route path="/inventory/stock-adjustments/new" element={<ProtectedRoute anyOf={[['STOCK_ADJUSTMENT', 'CREATE']]}><StockAdjustmentFormPage /></ProtectedRoute>} />
+        <Route path="/inventory/stock-adjustments/:id" element={<ProtectedRoute anyOf={[['STOCK_ADJUSTMENT', 'READ']]}><StockAdjustmentDetailPage /></ProtectedRoute>} />
         <Route
           path="/inventory/stock-transfers/new"
           element={
-            <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedRoute anyOf={[['STOCK_TRANSFER', 'CREATE']]}>
               <StockTransferFormPage />
             </ProtectedRoute>
           }
@@ -184,68 +197,61 @@ export default function App() {
         <Route
           path="/inventory/stock-transfers/:id"
           element={
-            <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedRoute anyOf={[['STOCK_TRANSFER', 'READ']]}>
               <StockTransferDetailPage />
             </ProtectedRoute>
           }
         />
 
-        <Route path="/fuel/stock" element={<FuelStockPage />} />
-        <Route path="/fuel/collections" element={<FuelCollectionsPage />} />
-        <Route path="/fuel/collections/new" element={<FuelCollectionFormPage />} />
-        <Route path="/fuel/collections/:id" element={<FuelCollectionDetailPage />} />
-        <Route path="/fuel/collections/:id/edit" element={<FuelCollectionFormPage />} />
-        <Route path="/fuel/issues" element={<FuelIssuesPage />} />
-        <Route path="/fuel/issues/new" element={<FuelIssueFormPage />} />
-        <Route path="/fuel/issues/:id/edit" element={<FuelIssueFormPage />} />
-        <Route path="/fuel/external" element={<ExternalFuelPage />} />
-        <Route path="/fuel/external/new" element={<ExternalFuelFormPage />} />
-        <Route path="/fuel/external/:id/edit" element={<ExternalFuelFormPage />} />
-        <Route path="/fuel/reports" element={<FuelReportsPage />} />
+        <Route path="/fuel/stock" element={<ProtectedRoute anyOf={[['FUEL_STOCK', 'READ']]}><FuelStockPage /></ProtectedRoute>} />
+        <Route path="/fuel/collections" element={<ProtectedRoute anyOf={[['FUEL_COLLECTION', 'READ']]}><FuelCollectionsPage /></ProtectedRoute>} />
+        <Route path="/fuel/collections/new" element={<ProtectedRoute anyOf={[['FUEL_COLLECTION', 'CREATE']]}><FuelCollectionFormPage /></ProtectedRoute>} />
+        <Route path="/fuel/collections/:id" element={<ProtectedRoute anyOf={[['FUEL_COLLECTION', 'READ']]}><FuelCollectionDetailPage /></ProtectedRoute>} />
+        <Route path="/fuel/collections/:id/edit" element={<ProtectedRoute anyOf={[['FUEL_COLLECTION', 'UPDATE']]}><FuelCollectionFormPage /></ProtectedRoute>} />
+        <Route path="/fuel/issues" element={<ProtectedRoute anyOf={[['FUEL', 'READ']]}><FuelIssuesPage /></ProtectedRoute>} />
+        <Route path="/fuel/issues/new" element={<ProtectedRoute anyOf={[['FUEL', 'CREATE']]}><FuelIssueFormPage /></ProtectedRoute>} />
+        <Route path="/fuel/issues/:id/edit" element={<ProtectedRoute anyOf={[['FUEL', 'UPDATE']]}><FuelIssueFormPage /></ProtectedRoute>} />
+        <Route path="/fuel/external" element={<ProtectedRoute anyOf={[['FUEL', 'READ']]}><ExternalFuelPage /></ProtectedRoute>} />
+        <Route path="/fuel/external/new" element={<ProtectedRoute anyOf={[['FUEL', 'CREATE']]}><ExternalFuelFormPage /></ProtectedRoute>} />
+        <Route path="/fuel/external/:id/edit" element={<ProtectedRoute anyOf={[['FUEL', 'UPDATE']]}><ExternalFuelFormPage /></ProtectedRoute>} />
+        <Route path="/fuel/reports" element={<ProtectedRoute allOf={[['FUEL', 'READ'], ['REPORTS', 'VIEW']]}><FuelReportsPage /></ProtectedRoute>} />
         <Route
           path="/fuel/stations"
           element={
-            <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedRoute anyOf={[['FUEL_STATION', 'CREATE'], ['FUEL_STATION', 'UPDATE']]}>
               <FuelStationsPage />
             </ProtectedRoute>
           }
         />
 
         <Route path="/adblue" element={<Navigate to="/adblue/overview" replace />} />
-        <Route path="/adblue/overview" element={<AdBlueOverviewPage />} />
-        <Route path="/adblue/purchases" element={<AdBluePurchasesPage />} />
-        <Route path="/adblue/purchases/new" element={<AdBluePurchaseFormPage />} />
-        <Route path="/adblue/purchases/:id/edit" element={<AdBluePurchaseFormPage />} />
-        <Route path="/adblue/fillings" element={<AdBlueFillingsPage />} />
-        <Route path="/adblue/fillings/new" element={<AdBlueFillingFormPage />} />
-        <Route path="/adblue/fillings/:id/edit" element={<AdBlueFillingFormPage />} />
-        <Route path="/adblue/reports" element={<AdBlueReportsPage />} />
+        <Route path="/adblue/overview" element={<ProtectedRoute anyOf={[['ADBLUE', 'READ']]}><AdBlueOverviewPage /></ProtectedRoute>} />
+        <Route path="/adblue/purchases" element={<ProtectedRoute anyOf={[['ADBLUE', 'READ']]}><AdBluePurchasesPage /></ProtectedRoute>} />
+        <Route path="/adblue/purchases/new" element={<ProtectedRoute anyOf={[['ADBLUE', 'CREATE']]}><AdBluePurchaseFormPage /></ProtectedRoute>} />
+        <Route path="/adblue/purchases/:id/edit" element={<ProtectedRoute anyOf={[['ADBLUE', 'UPDATE']]}><AdBluePurchaseFormPage /></ProtectedRoute>} />
+        <Route path="/adblue/fillings" element={<ProtectedRoute anyOf={[['ADBLUE', 'READ']]}><AdBlueFillingsPage /></ProtectedRoute>} />
+        <Route path="/adblue/fillings/new" element={<ProtectedRoute anyOf={[['ADBLUE', 'CREATE']]}><AdBlueFillingFormPage /></ProtectedRoute>} />
+        <Route path="/adblue/fillings/:id/edit" element={<ProtectedRoute anyOf={[['ADBLUE', 'UPDATE']]}><AdBlueFillingFormPage /></ProtectedRoute>} />
+        <Route path="/adblue/reports" element={<ProtectedRoute anyOf={[['ADBLUE', 'READ']]}><AdBlueReportsPage /></ProtectedRoute>} />
 
         <Route path="/tyres" element={<Navigate to="/tyres/stores" replace />} />
-        <Route path="/tyres/stores" element={<TyreStoresPage />} />
+        <Route path="/tyres/stores" element={<ProtectedRoute anyOf={[['TYRE', 'READ']]}><TyreStoresPage /></ProtectedRoute>} />
         <Route path="/tyres/stock" element={<Navigate to="/tyres/stores" replace />} />
-        <Route path="/tyres/assets" element={<VehicleTyresPage />} />
+        <Route path="/tyres/assets" element={<ProtectedRoute anyOf={[['TYRE', 'READ']]}><VehicleTyresPage /></ProtectedRoute>} />
         <Route path="/tyres/fitting" element={<Navigate to="/tyres/assets" replace />} />
-        <Route path="/tyres/purchases" element={<TyrePurchasesPage />} />
-        <Route path="/tyres/purchases/new" element={<TyrePurchaseFormPage />} />
-        <Route path="/tyres/purchases/:id" element={<TyrePurchaseDetailPage />} />
-        <Route path="/tyres/reports" element={<TyreReportsPage />} />
-        <Route path="/tyres/history" element={<TyreHistoryPage />} />
-        <Route path="/tyres/transfers" element={<TyreTransfersPage />} />
-        <Route
-          path="/tyres/transfers/new"
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <TyreTransferFormPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/tyres/:id" element={<TyreDetailPage />} />
+        <Route path="/tyres/purchases" element={<ProtectedRoute anyOf={[['TYRE', 'READ']]}><TyrePurchasesPage /></ProtectedRoute>} />
+        <Route path="/tyres/purchases/new" element={<ProtectedRoute anyOf={[['TYRE', 'CREATE']]}><TyrePurchaseFormPage /></ProtectedRoute>} />
+        <Route path="/tyres/purchases/:id" element={<ProtectedRoute anyOf={[['TYRE', 'READ']]}><TyrePurchaseDetailPage /></ProtectedRoute>} />
+        <Route path="/tyres/reports" element={<ProtectedRoute allOf={[['TYRE', 'READ'], ['REPORTS', 'VIEW']]}><TyreReportsPage /></ProtectedRoute>} />
+        <Route path="/tyres/history" element={<ProtectedRoute anyOf={[['TYRE', 'READ']]}><TyreHistoryPage /></ProtectedRoute>} />
+        <Route path="/tyres/transfers" element={<ProtectedRoute anyOf={[['TYRE', 'READ']]}><TyreTransfersPage /></ProtectedRoute>} />
+        <Route path="/tyres/transfers/new" element={<ProtectedRoute anyOf={[['TYRE', 'TRANSFER']]}><TyreTransferFormPage /></ProtectedRoute>} />
+        <Route path="/tyres/:id" element={<ProtectedRoute anyOf={[['TYRE', 'READ']]}><TyreDetailPage /></ProtectedRoute>} />
 
-        <Route path="/batteries" element={<BatteriesPage />} />
-        <Route path="/batteries/add" element={<AddBatteriesPage />} />
-        <Route path="/batteries/history" element={<BatteryHistoryPage />} />
-        <Route path="/batteries/:id" element={<BatteryDetailPage />} />
+        <Route path="/batteries" element={<ProtectedRoute anyOf={[['BATTERY', 'READ']]}><BatteriesPage /></ProtectedRoute>} />
+        <Route path="/batteries/add" element={<ProtectedRoute anyOf={[['BATTERY', 'CREATE']]}><AddBatteriesPage /></ProtectedRoute>} />
+        <Route path="/batteries/history" element={<ProtectedRoute anyOf={[['BATTERY', 'READ']]}><BatteryHistoryPage /></ProtectedRoute>} />
+        <Route path="/batteries/:id" element={<ProtectedRoute anyOf={[['BATTERY', 'READ']]}><BatteryDetailPage /></ProtectedRoute>} />
 
         <Route path="/forbidden" element={<ForbiddenPage />} />
       </Route>

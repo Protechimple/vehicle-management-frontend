@@ -121,10 +121,13 @@ export const authApi = {
 
 export const usersApi = {
   list: () => api.get('/users'),
-  createSupervisor: (payload) => api.post('/users/supervisors', payload),
-  updateSupervisor: (id, payload) => api.put(`/users/supervisors/${id}`, payload),
-  setSupervisorStatus: (id, status) => api.patch(`/users/supervisors/${id}/status`, { status }),
-  changeSupervisorPassword: (id, password) => api.put(`/users/supervisors/${id}/password`, { password }),
+  team: () => api.get('/users/team'),
+  createMember: (payload) => api.post('/users/members', payload),
+  updateMember: (id, payload) => api.put(`/users/members/${id}`, payload),
+  setMemberStatus: (id, status) => api.patch(`/users/members/${id}/status`, { status }),
+  changeMemberPassword: (id, password) => api.put(`/users/members/${id}/password`, { password }),
+  getAccess: (id) => api.get(`/users/members/${id}/access`),
+  updateAccess: (id, permissions) => api.put(`/users/members/${id}/access`, { permissions }),
   updateOwnProfile: (payload) => api.put('/users/me', payload),
   changeOwnPassword: (payload) => api.put('/users/me/password', payload),
 };
@@ -433,8 +436,15 @@ export const inventoryReportsApi = {
   partsByAsset: (params, options) => api.get(`/inventory-reports/parts-by-asset${toQueryString(params)}`, options),
 };
 
+// What each role may do in the organization; the Admin's alone.
+export const accessApi = {
+  roles: () => api.get('/access/roles'),
+  updateRole: (role, permissions) => api.put(`/access/roles/${role}`, { permissions }),
+};
+
 export const dashboardApi = {
-  summary: () => api.get('/dashboard/summary'),
+  summary: (params) => api.get(`/dashboard/summary${toQueryString(params)}`),
+  sites: (params) => api.get(`/dashboard/sites${toQueryString(params)}`),
   monthlyCost: (params) => api.get(`/dashboard/monthly-cost${toQueryString(params)}`),
   fleet: (params) => api.get(`/dashboard/fleet${toQueryString(params)}`),
   maintenance: (params) => api.get(`/dashboard/maintenance${toQueryString(params)}`),

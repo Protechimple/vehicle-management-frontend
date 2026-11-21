@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { RoleBadge, Button } from '../components/ui';
 import BrandingButton from '../components/BrandingButton';
 import ThemeToggle from '../components/ThemeToggle';
@@ -66,10 +67,14 @@ export default function Header({ onToggleSidebar }) {
         <ThemeToggle className="hidden sm:inline-flex" />
         <BrandingButton className="hidden sm:inline-flex" />
 
-        <div className="hidden text-right leading-tight sm:block">
+        <Link
+          to="/profile"
+          title="My profile"
+          className="hidden rounded px-1.5 py-0.5 text-right leading-tight transition-colors hover:bg-steel-100 sm:block"
+        >
           <p className="text-sm font-semibold text-steel-900">{user?.name}</p>
           <p className="text-xs text-steel-500">{user?.email}</p>
-        </div>
+        </Link>
 
         <RoleBadge role={user?.role} />
 

@@ -20,8 +20,9 @@ function StatusBadge({ status }) {
 
 export default function StockTransferDetailPage() {
   const { id } = useParams();
-  const { user, role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { user, role, canPickSite, siteIds } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
 
   const [transfer, setTransfer] = useState(null);
   const [loadError, setLoadError] = useState(null);
@@ -73,7 +74,7 @@ export default function StockTransferDetailPage() {
   const fromSiteName = transfer.fromSiteName ?? '—';
   const toSiteName = transfer.toSiteName ?? '—';
 
-  const canReceiveHere = isAdmin || user?.siteId === transfer.toSiteId;
+  const canReceiveHere = user?.role === 'admin' || (siteIds ?? []).map(Number).includes(Number(transfer.toSiteId));
 
   const columns = [
     { key: 'itemId', label: 'Item', render: (row) => row.itemName ?? '—' },

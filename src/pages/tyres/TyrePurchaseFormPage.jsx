@@ -23,8 +23,9 @@ function lineFigures(line) {
 
 export default function TyrePurchaseFormPage() {
   const navigate = useNavigate();
-  const { role, user } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, user, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
   const [sites, setSites] = useState([]);
   const [types, setTypes] = useState([]);
@@ -37,9 +38,9 @@ export default function TyrePurchaseFormPage() {
   const [newTypeFor, setNewTypeFor] = useState(null);
 
   useEffect(() => {
-    if (isAdmin) listAll(sitesApi.list).then((r) => setSites(r.data)).catch(() => setSites([]));
+    if (picksSite) listAll(sitesApi.list).then((r) => setSites(r.data)).catch(() => setSites([]));
     listAll(tyresApi.types).then((r) => setTypes(r.data)).catch(() => setTypes([]));
-  }, [isAdmin]);
+  }, [picksSite]);
 
   const update = (field) => (event) => {
     setForm((f) => ({ ...f, [field]: event.target.value }));
@@ -64,7 +65,7 @@ export default function TyrePurchaseFormPage() {
   async function handleSubmit(event) {
     event.preventDefault();
     const next = {
-      siteId: isAdmin && !form.siteId ? 'Choose the site receiving these tyres.' : null,
+      siteId: picksSite && !form.siteId ? 'Choose the site receiving these tyres.' : null,
       purchaseDate: checkDateTime(form.purchaseDate),
     };
     const nextLines = {};
@@ -87,7 +88,7 @@ export default function TyrePurchaseFormPage() {
     setError(null);
     try {
       const response = await tyresApi.createPurchase({
-        siteId: isAdmin ? Number(form.siteId) : undefined,
+        siteId: picksSite ? Number(form.siteId) : undefined,
         supplierName: form.supplierName.trim() || null,
         purchaseDate: splitDateTime(form.purchaseDate).date,
         purchaseTime: splitDateTime(form.purchaseDate).time,
@@ -127,7 +128,7 @@ export default function TyrePurchaseFormPage() {
 
         <Card>
           <div className="grid gap-x-4 sm:grid-cols-2 lg:grid-cols-4">
-            {isAdmin ? (
+            {picksSite ? (
               <Field label="Site" required error={errors.siteId}>
                 {({ id, invalid, describedBy }) => (
                   <Select id={id} invalid={invalid} describedBy={describedBy} value={form.siteId} onChange={update('siteId')}>

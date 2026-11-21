@@ -63,8 +63,9 @@ export default function PurchaseFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
-  const { user, role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { user, role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
 
   const [form, setForm] = useState({ siteId: '', supplierId: '', purchaseDate: todayDateOnly(), remarks: '' });
   const [lines, setLines] = useState([{ ...EMPTY_LINE }]);
@@ -100,12 +101,12 @@ export default function PurchaseFormPage() {
     listAll(itemsApi.list)
       .then((response) => setItems(response.data))
       .catch(() => setItems([]));
-    if (isAdmin) {
+    if (picksSite) {
       listAll(sitesApi.list)
         .then((response) => setSites(response.data))
         .catch(() => setSites([]));
     }
-  }, [isAdmin, isEdit]);
+  }, [picksSite, isEdit]);
 
   const purchaseTotal = useMemo(() => {
     const priced = lines.map(lineFigures).filter(Boolean);
@@ -161,7 +162,7 @@ export default function PurchaseFormPage() {
     const payload = isEdit
       ? { supplierId: Number(form.supplierId), purchaseDate: form.purchaseDate, remarks: form.remarks || undefined, items: itemsPayload }
       : {
-          siteId: isAdmin ? Number(form.siteId) : undefined,
+          siteId: picksSite ? Number(form.siteId) : undefined,
           supplierId: Number(form.supplierId),
           purchaseDate: form.purchaseDate,
           remarks: form.remarks || undefined,
@@ -219,7 +220,7 @@ export default function PurchaseFormPage() {
                   <Input id={fieldId} value={sites.find((s) => s.id === form.siteId)?.name ?? `Site #${form.siteId}`} disabled />
                 )}
               </Field>
-            ) : isAdmin ? (
+            ) : picksSite ? (
               <Field label="Site" required>
                 {({ id: fieldId, invalid, describedBy }) => (
                   <Select id={fieldId} invalid={invalid} describedBy={describedBy} value={form.siteId} onChange={updateForm('siteId')} required>

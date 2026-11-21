@@ -72,7 +72,7 @@ export function RowActions({ record, onAction }) {
 
   if (record.status === 'archived') return <Badge tone="neutral">Deleted</Badge>;
   // Part of an asset's history from before it came to this supervisor's site: readable, not theirs to change.
-  if (role === 'supervisor' && record.siteId !== user?.siteId) return <span className="text-xs text-steel-500">View only</span>;
+  if (role !== 'admin' && !(user?.siteIds ?? [user?.siteId]).map(Number).includes(Number(record.siteId))) return <span className="text-xs text-steel-500">View only</span>;
 
   return (
     <div className="flex items-center gap-3">

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Initials, formatDateTime, formatTime, groupByDay } from './tenantDisplay';
+import { roleLabel } from '../../config/permissions';
 
 function actorTone(actor) {
   if (actor.type === 'platform') return 'platform';
@@ -45,7 +46,7 @@ export default function ActivityFeed({ entries, showOrganization = false, emptyM
                         {' · '}
                       </>
                     )}
-                    {entry.actor.type === 'user' ? entry.actor.role : entry.actor.email}
+                    {entry.actor.type === 'user' ? roleLabel(entry.actor.role) : entry.actor.email}
                   </p>
                 </div>
                 <time

@@ -7,7 +7,6 @@ import AssetDocumentFields from '../components/AssetDocumentFields';
 import { FUEL_TYPE_OPTIONS } from '../config/fuelTypes';
 import { complianceSlotsToFormValue } from '../config/compliance';
 import { useAuth } from '../context/AuthContext';
-import { hasPermission } from '../config/permissions';
 
 const RCPL_TAKEN = 'This RCPL is already in use by another machine';
 
@@ -43,9 +42,10 @@ export default function MachineryFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
-  const { user, role } = useAuth();
+  const { user, isAdmin, canPickSite } = useAuth();
 
-  const canChooseSite = hasPermission(role, 'SITE', 'ASSIGN');
+  // The Admin places an asset at any site; a Site Manager with several sites picks one of theirs.
+  const canChooseSite = canPickSite;
   const lockedSiteId = user?.siteId ?? '';
 
   const [form, setForm] = useState(EMPTY_FORM);
@@ -312,7 +312,7 @@ export default function MachineryFormPage() {
                   onChange={update('currentSiteId')}
                   disabled={!canChooseSite}
                 >
-                  <option value="">Unassigned</option>
+                  <option value="">{isAdmin ? 'Unassigned' : 'Select one of your sites'}</option>
                   {archivedSite && (
                     <option value={archivedSite.id} data-added={archivedSite.id}>
                       {archivedSite.name} (archived)

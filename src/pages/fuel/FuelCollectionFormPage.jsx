@@ -37,12 +37,13 @@ export default function FuelCollectionFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
-  const { user, role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { user, role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
 
   const [form, setForm] = useState({
-    siteId: isAdmin ? '' : String(user?.siteId ?? ''),
+    siteId: picksSite ? '' : String(user?.siteId ?? ''),
     carrierAssetId: '',
     fuelStationId: '',
     fuelType: 'Diesel',
@@ -116,12 +117,12 @@ export default function FuelCollectionFormPage() {
   async function handleSubmit(event) {
     event.preventDefault();
     setSubmitError(null);
-    const found = validate(form, rows, isAdmin && !isEdit);
+    const found = validate(form, rows, picksSite && !isEdit);
     setErrors(found);
     if (Object.keys(found).length > 0) return;
 
     const payload = {
-      siteId: isAdmin && !isEdit ? Number(form.siteId) : undefined,
+      siteId: picksSite && !isEdit ? Number(form.siteId) : undefined,
       carrierAssetId: form.carrierAssetId,
       fuelStationId: Number(form.fuelStationId),
       fuelType: form.fuelType,
@@ -175,7 +176,7 @@ export default function FuelCollectionFormPage() {
       {stations.length === 0 && (
         <Alert tone="warning">
           No fuel stations yet.{' '}
-          {isAdmin ? (
+          {picksSite ? (
             <Link to="/fuel/stations" className="font-semibold underline">
               Add the pump first
             </Link>
@@ -190,10 +191,10 @@ export default function FuelCollectionFormPage() {
           <Alert tone="error">{submitError}</Alert>
 
           <div className="grid gap-x-4 sm:grid-cols-2">
-            <Field label="Site" required error={errors.siteId} hint={!isAdmin ? 'Your site.' : isEdit ? "The site can't be changed." : undefined}>
+            <Field label="Site" required error={errors.siteId} hint={!picksSite ? 'Your site.' : isEdit ? "The site can't be changed." : undefined}>
               {({ id: fieldId, invalid, describedBy }) => (
-                <Select id={fieldId} invalid={invalid} describedBy={describedBy} value={form.siteId} onChange={update('siteId')} disabled={!isAdmin || isEdit}>
-                  {isAdmin && !isEdit && <option value="">Select a site</option>}
+                <Select id={fieldId} invalid={invalid} describedBy={describedBy} value={form.siteId} onChange={update('siteId')} disabled={!picksSite || isEdit}>
+                  {picksSite && !isEdit && <option value="">Select a site</option>}
                   {Object.entries(siteNames).map(([siteId, name]) => (
                     <option key={siteId} value={siteId} data-added={siteId}>
                       {name}

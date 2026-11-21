@@ -10,8 +10,9 @@ export default function AdBluePurchaseFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
-  const { role, user } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, user, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
 
   const [form, setForm] = useState({ siteId: '', supplierName: '', purchaseDate: todayDateOnly(), quantity: '', ratePerLitre: '' });
@@ -23,7 +24,7 @@ export default function AdBluePurchaseFormPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (isAdmin && !isEdit) listAll(sitesApi.list).then((r) => setSites(r.data)).catch(() => setSites([]));
+    if (picksSite && !isEdit) listAll(sitesApi.list).then((r) => setSites(r.data)).catch(() => setSites([]));
     if (!isEdit) return;
     adblueApi
       .getPurchase(id)
@@ -32,7 +33,7 @@ export default function AdBluePurchaseFormPage() {
         setLoaded(true);
       })
       .catch((err) => setLoadError(err.message));
-  }, [id, isEdit, isAdmin]);
+  }, [id, isEdit, picksSite]);
 
   function update(field) {
     return (event) => {
@@ -48,7 +49,7 @@ export default function AdBluePurchaseFormPage() {
 
   function validate() {
     const found = {};
-    if (isAdmin && !isEdit && !form.siteId) found.siteId = 'Choose the site storing this AdBlue.';
+    if (picksSite && !isEdit && !form.siteId) found.siteId = 'Choose the site storing this AdBlue.';
     if (!form.supplierName.trim()) found.supplierName = 'Enter the supplier name.';
     if (!form.purchaseDate) found.purchaseDate = 'Enter the purchase date.';
     else if (form.purchaseDate > todayDateOnly()) found.purchaseDate = 'The date cannot be in the future.';
@@ -71,7 +72,7 @@ export default function AdBluePurchaseFormPage() {
     setSubmitting(true);
     try {
       if (isEdit) await adblueApi.updatePurchase(id, payload);
-      else await adblueApi.createPurchase({ ...payload, siteId: isAdmin ? Number(form.siteId) : undefined });
+      else await adblueApi.createPurchase({ ...payload, siteId: picksSite ? Number(form.siteId) : undefined });
       navigate('/adblue/purchases', { state: { message: isEdit ? 'AdBlue purchase updated.' : 'AdBlue purchase recorded. Stock has been added to the site.' } });
     } catch (err) {
       setSubmitError(err.message);
@@ -109,7 +110,7 @@ export default function AdBluePurchaseFormPage() {
           <Alert tone="error">{submitError}</Alert>
 
           <div className="grid gap-x-4 sm:grid-cols-2">
-            {isAdmin && !isEdit ? (
+            {picksSite && !isEdit ? (
               <Field label="Site" required error={errors.siteId}>
                 {({ id: fieldId, invalid, describedBy }) => (
                   <Select id={fieldId} invalid={invalid} describedBy={describedBy} value={form.siteId} onChange={update('siteId')}>

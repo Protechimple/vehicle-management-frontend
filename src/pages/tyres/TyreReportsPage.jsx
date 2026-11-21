@@ -140,8 +140,9 @@ export function CostReport({ data }) {
 const LOADERS = { assets: tyresApi.assetReport, costs: tyresApi.costReport };
 
 export default function TyreReportsPage() {
-  const { role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
   const [tab, setTab] = useState('assets');
   const [filters, setFilters] = useState({ dateFrom: '', dateTo: '', siteId: '', assetType: '' });
@@ -177,7 +178,7 @@ export default function TyreReportsPage() {
       <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Input type="date" aria-label="From date" title="From date" value={filters.dateFrom} max={filters.dateTo || todayDateOnly()} onChange={set('dateFrom')} />
         <Input type="date" aria-label="To date" title="To date" value={filters.dateTo} min={filters.dateFrom || undefined} max={todayDateOnly()} onChange={set('dateTo')} />
-        {isAdmin && (
+        {picksSite && (
           <Select aria-label="Site" value={filters.siteId} onChange={set('siteId')}>
             <option value="">All sites</option>
             {Object.entries(siteNames).map(([siteId, name]) => (

@@ -10,8 +10,9 @@ const EMPTY_LINE = { itemId: '', quantity: '' };
 
 export default function StockTransferFormPage() {
   const navigate = useNavigate();
-  const { user, role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { user, role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
 
   const [form, setForm] = useState({ fromSiteId: '', toSiteId: '', transferDate: todayDateOnly(), remarks: '' });
   const [lines, setLines] = useState([{ ...EMPTY_LINE }]);
@@ -20,7 +21,7 @@ export default function StockTransferFormPage() {
   const [submitError, setSubmitError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const effectiveFromSiteId = isAdmin ? form.fromSiteId : String(user?.siteId ?? '');
+  const effectiveFromSiteId = picksSite ? form.fromSiteId : String(user?.siteId ?? '');
   const itemIdsInStock = useItemIdsInStock(effectiveFromSiteId);
 
   useEffect(() => {
@@ -65,7 +66,7 @@ export default function StockTransferFormPage() {
     setSubmitting(true);
 
     const payload = {
-      fromSiteId: isAdmin ? Number(form.fromSiteId) : undefined,
+      fromSiteId: picksSite ? Number(form.fromSiteId) : undefined,
       toSiteId: Number(form.toSiteId),
       transferDate: form.transferDate,
       remarks: form.remarks || undefined,
@@ -99,7 +100,7 @@ export default function StockTransferFormPage() {
           <Alert tone="error">{submitError}</Alert>
 
           <div className="grid gap-x-4 sm:grid-cols-2">
-            {isAdmin ? (
+            {picksSite ? (
               <Field label="From site" required>
                 {({ id: fieldId, invalid, describedBy }) => (
                   <Select id={fieldId} invalid={invalid} describedBy={describedBy} value={form.fromSiteId} onChange={updateForm('fromSiteId')} required>

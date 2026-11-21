@@ -10,8 +10,8 @@ const TABS = [
   { value: 'movements', label: 'Movements' },
 ];
 
-function SiteFilter({ isAdmin, siteNames, value, onChange }) {
-  if (!isAdmin) return null;
+function SiteFilter({ picksSite, siteNames, value, onChange }) {
+  if (!picksSite) return null;
   return (
     <Select value={value} onChange={(e) => onChange(e.target.value)}>
       <option value="">All sites</option>
@@ -37,7 +37,7 @@ function FuelTypeFilter({ value, onChange }) {
   );
 }
 
-function StockTab({ isAdmin, siteNames }) {
+function StockTab({ picksSite, siteNames }) {
   const [filters, setFilters] = useState({ siteId: '', fuelType: '' });
   const [rows, setRows] = useState(null);
   const [error, setError] = useState(null);
@@ -89,7 +89,7 @@ function StockTab({ isAdmin, siteNames }) {
   return (
     <div>
       <div className="mb-4 grid gap-3 sm:max-w-md sm:grid-cols-2">
-        <SiteFilter isAdmin={isAdmin} siteNames={siteNames} value={filters.siteId} onChange={(siteId) => setFilters((f) => ({ ...f, siteId }))} />
+        <SiteFilter picksSite={picksSite} siteNames={siteNames} value={filters.siteId} onChange={(siteId) => setFilters((f) => ({ ...f, siteId }))} />
         <FuelTypeFilter value={filters.fuelType} onChange={(fuelType) => setFilters((f) => ({ ...f, fuelType }))} />
       </div>
       <Alert tone="error">{error}</Alert>
@@ -109,7 +109,7 @@ function StockTab({ isAdmin, siteNames }) {
   );
 }
 
-function MovementsTab({ isAdmin, siteNames }) {
+function MovementsTab({ picksSite, siteNames }) {
   const [filters, setFilters] = useState({ siteId: '', fuelType: '', entryType: '', dateFrom: '', dateTo: '', page: 1 });
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
@@ -150,8 +150,8 @@ function MovementsTab({ isAdmin, siteNames }) {
 
   return (
     <div>
-      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${isAdmin ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
-        <SiteFilter isAdmin={isAdmin} siteNames={siteNames} value={filters.siteId} onChange={update('siteId')} />
+      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${picksSite ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
+        <SiteFilter picksSite={picksSite} siteNames={siteNames} value={filters.siteId} onChange={update('siteId')} />
         <FuelTypeFilter value={filters.fuelType} onChange={update('fuelType')} />
         <Select value={filters.entryType} onChange={(e) => update('entryType')(e.target.value)}>
           <option value="">All movement types</option>
@@ -186,8 +186,9 @@ function MovementsTab({ isAdmin, siteNames }) {
 }
 
 export default function FuelStockPage() {
-  const { role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
   const [tab, setTab] = useState('stock');
 
@@ -197,15 +198,15 @@ export default function FuelStockPage() {
         <div>
           <h1 className="text-xl font-semibold text-steel-900">Fuel Stock</h1>
           <p className="mt-1 text-steel-500">
-            {isAdmin ? 'Fuel on hand at every site, and every movement in and out.' : 'Fuel on hand at your site, and every movement in and out.'}
+            {role === 'admin' ? 'Fuel on hand at every site, and every movement in and out.' : picksSite ? 'Fuel on hand at your sites, and every movement in and out.' : 'Fuel on hand at your site, and every movement in and out.'}
           </p>
         </div>
       </div>
 
       <Tabs tabs={TABS} active={tab} onChange={setTab} />
 
-      {tab === 'stock' && <StockTab isAdmin={isAdmin} siteNames={siteNames} />}
-      {tab === 'movements' && <MovementsTab isAdmin={isAdmin} siteNames={siteNames} />}
+      {tab === 'stock' && <StockTab picksSite={picksSite} siteNames={siteNames} />}
+      {tab === 'movements' && <MovementsTab picksSite={picksSite} siteNames={siteNames} />}
     </div>
   );
 }

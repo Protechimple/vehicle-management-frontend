@@ -12,8 +12,9 @@ const PAGE_SIZE = 20;
 export default function TyrePurchasesPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
   const [filters, setFilters] = useState({ search: '', siteId: '', status: 'active', dateFrom: '', dateTo: '', page: 1, sort: 'purchaseDate:desc' });
   const [result, setResult] = useState(null);
@@ -109,9 +110,9 @@ export default function TyrePurchasesPage() {
       <Alert tone="success">{notice}</Alert>
       <Alert tone="error">{error}</Alert>
 
-      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${isAdmin ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
+      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${picksSite ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
         <Input placeholder="Search number, bill or supplier..." value={filters.search} onChange={(e) => updateFilter('search', e.target.value)} />
-        {isAdmin && (
+        {picksSite && (
           <Select aria-label="Site" value={filters.siteId} onChange={(e) => updateFilter('siteId', e.target.value)}>
             <option value="">All sites</option>
             {Object.entries(siteNames).map(([siteId, name]) => (

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import Can from '../components/Can';
+import { useAuth } from '../context/AuthContext';
 import BrandingButton from '../components/BrandingButton';
 import ThemeToggle from '../components/ThemeToggle';
 
@@ -46,7 +46,122 @@ function NavSection({ title, paths, children }) {
   );
 }
 
+const VIEW = (resource) => [[resource, 'READ']];
+
+// Every link names what the user must be allowed to do to see it. The Admin decides that per role and per person, so a
+// section with nothing left in it disappears.
+const NAV_SECTIONS = [
+  {
+    title: 'Asset Management',
+    paths: ['/vehicles', '/machinery', '/sites', '/site-management'],
+    links: [
+      { to: '/vehicles', label: 'Vehicles', anyOf: VIEW('VEHICLE') },
+      { to: '/machinery', label: 'Machinery', anyOf: VIEW('MACHINERY') },
+      { to: '/sites', label: 'Sites', roles: ['admin'] },
+      { to: '/site-management', label: 'Site Management', anyOf: [['VEHICLE', 'READ'], ['MACHINERY', 'READ']] },
+    ],
+  },
+  {
+    title: 'Maintenance',
+    paths: ['/maintenance'],
+    links: [
+      { to: '/maintenance/preventive', label: 'Preventive Maintenance', anyOf: VIEW('MAINTENANCE') },
+      { to: '/maintenance/breakdowns', label: 'Breakdown Maintenance', anyOf: VIEW('MAINTENANCE') },
+      { to: '/maintenance/history', label: 'Maintenance History', anyOf: VIEW('MAINTENANCE') },
+    ],
+  },
+  {
+    title: 'Compliance',
+    paths: ['/compliance'],
+    links: [{ to: '/compliance', label: 'Compliance Documents', anyOf: VIEW('COMPLIANCE') }],
+  },
+  {
+    title: 'Fuel',
+    paths: ['/fuel'],
+    links: [
+      { to: '/fuel/stock', label: 'Fuel Stock', anyOf: VIEW('FUEL_STOCK') },
+      { to: '/fuel/collections', label: 'Fuel Collections', anyOf: VIEW('FUEL_COLLECTION') },
+      { to: '/fuel/issues', label: 'Fuel Issues', anyOf: VIEW('FUEL') },
+      { to: '/fuel/external', label: 'External Vehicle Fuel', anyOf: VIEW('FUEL') },
+      { to: '/fuel/reports', label: 'Fuel Reports', allOf: [['FUEL', 'READ'], ['REPORTS', 'VIEW']] },
+      { to: '/fuel/stations', label: 'Fuel Stations', anyOf: [['FUEL_STATION', 'CREATE'], ['FUEL_STATION', 'UPDATE']] },
+    ],
+  },
+  {
+    title: 'AdBlue',
+    paths: ['/adblue'],
+    links: [
+      { to: '/adblue/overview', label: 'Overview', anyOf: VIEW('ADBLUE') },
+      { to: '/adblue/purchases', label: 'Purchases', anyOf: VIEW('ADBLUE') },
+      { to: '/adblue/fillings', label: 'Filling Records', anyOf: VIEW('ADBLUE') },
+      { to: '/adblue/reports', label: 'Reports', anyOf: VIEW('ADBLUE') },
+    ],
+  },
+  {
+    title: 'Tyres',
+    paths: ['/tyres'],
+    links: [
+      { to: '/tyres/stores', label: 'Tyre Stores', anyOf: VIEW('TYRE') },
+      { to: '/tyres/purchases', label: 'Tyre Purchases', anyOf: VIEW('TYRE') },
+      { to: '/tyres/assets', label: 'Vehicle Tyres', anyOf: VIEW('TYRE') },
+      { to: '/tyres/transfers', label: 'Tyre Transfers', anyOf: VIEW('TYRE') },
+      { to: '/tyres/history', label: 'Tyre History', anyOf: VIEW('TYRE') },
+      { to: '/tyres/reports', label: 'Tyre Reports', allOf: [['TYRE', 'READ'], ['REPORTS', 'VIEW']] },
+    ],
+  },
+  {
+    title: 'Batteries',
+    paths: ['/batteries'],
+    links: [
+      { to: '/batteries', end: true, label: 'All Batteries', anyOf: VIEW('BATTERY') },
+      { to: '/batteries/add', label: 'Add Batteries', anyOf: [['BATTERY', 'CREATE']] },
+      { to: '/batteries/history', label: 'Battery History', anyOf: VIEW('BATTERY') },
+    ],
+  },
+  {
+    title: 'Inventory',
+    paths: ['/inventory'],
+    links: [
+      {
+        to: '/inventory/catalog',
+        label: 'Item Catalog',
+        anyOf: [['ITEM', 'READ'], ['ITEM_CATEGORY', 'READ'], ['UOM', 'READ'], ['SUPPLIER', 'READ']],
+      },
+      {
+        to: '/inventory/movements',
+        label: 'Stock Movements',
+        anyOf: [['PURCHASE', 'READ'], ['ASSET_ISSUE', 'READ'], ['STOCK_ADJUSTMENT', 'READ'], ['STOCK_TRANSFER', 'READ']],
+      },
+      { to: '/inventory/stock', label: 'Stock', anyOf: VIEW('STOCK') },
+      { to: '/inventory/reports', label: 'Inventory Reports', allOf: [['STOCK', 'READ'], ['REPORTS', 'VIEW']] },
+    ],
+  },
+  {
+    title: 'Team',
+    paths: ['/team'],
+    links: [{ to: '/team', label: 'My Team', anyOf: [['USERS', 'VIEW_TEAM']] }],
+  },
+  {
+    title: 'Administration',
+    paths: ['/users', '/access', '/profile'],
+    links: [
+      { to: '/profile', label: 'My Profile', roles: ['admin'] },
+      { to: '/users', label: 'Organization Users', roles: ['admin'] },
+      { to: '/access', label: 'Roles & Access', roles: ['admin'] },
+    ],
+  },
+];
+
 export default function Sidebar({ open, onNavigate }) {
+  const { role, can } = useAuth();
+  const allowed = (link) =>
+    (!link.roles || link.roles.includes(role)) &&
+    (!link.anyOf || link.anyOf.some(([resource, action]) => can(resource, action))) &&
+    (!link.allOf || link.allOf.every(([resource, action]) => can(resource, action)));
+  const visibleSections = NAV_SECTIONS.map((section) => ({ ...section, links: section.links.filter(allowed) })).filter(
+    (section) => section.links.length > 0
+  );
+
   return (
     <aside
       className={[
@@ -79,134 +194,15 @@ export default function Sidebar({ open, onNavigate }) {
           Dashboard
         </NavLink>
 
-        <NavSection title="Asset Management" paths={['/vehicles', '/machinery', '/sites', '/site-management']}>
-          <NavLink to="/vehicles" className={linkClasses} onClick={onNavigate}>
-            Vehicles
-          </NavLink>
-          <NavLink to="/machinery" className={linkClasses} onClick={onNavigate}>
-            Machinery
-          </NavLink>
-          <Can roles={['admin']}>
-            <NavLink to="/sites" className={linkClasses} onClick={onNavigate}>
-              Sites
-            </NavLink>
-          </Can>
-          <NavLink to="/site-management" className={linkClasses} onClick={onNavigate}>
-            Site Management
-          </NavLink>
-        </NavSection>
-
-        <NavSection title="Maintenance" paths={['/maintenance']}>
-          <NavLink to="/maintenance/preventive" className={linkClasses} onClick={onNavigate}>
-            Preventive Maintenance
-          </NavLink>
-          <NavLink to="/maintenance/breakdowns" className={linkClasses} onClick={onNavigate}>
-            Breakdown Maintenance
-          </NavLink>
-          <NavLink to="/maintenance/history" className={linkClasses} onClick={onNavigate}>
-            Maintenance History
-          </NavLink>
-        </NavSection>
-
-        <NavSection title="Compliance" paths={['/compliance']}>
-          <NavLink to="/compliance" className={linkClasses} onClick={onNavigate}>
-            Compliance Documents
-          </NavLink>
-        </NavSection>
-
-        <NavSection title="Fuel" paths={['/fuel']}>
-          <NavLink to="/fuel/stock" className={linkClasses} onClick={onNavigate}>
-            Fuel Stock
-          </NavLink>
-          <NavLink to="/fuel/collections" className={linkClasses} onClick={onNavigate}>
-            Fuel Collections
-          </NavLink>
-          <NavLink to="/fuel/issues" className={linkClasses} onClick={onNavigate}>
-            Fuel Issues
-          </NavLink>
-          <NavLink to="/fuel/external" className={linkClasses} onClick={onNavigate}>
-            External Vehicle Fuel
-          </NavLink>
-          <NavLink to="/fuel/reports" className={linkClasses} onClick={onNavigate}>
-            Fuel Reports
-          </NavLink>
-          <Can roles={['admin']}>
-            <NavLink to="/fuel/stations" className={linkClasses} onClick={onNavigate}>
-              Fuel Stations
-            </NavLink>
-          </Can>
-        </NavSection>
-
-        <NavSection title="AdBlue" paths={['/adblue']}>
-          <NavLink to="/adblue/overview" className={linkClasses} onClick={onNavigate}>
-            Overview
-          </NavLink>
-          <NavLink to="/adblue/purchases" className={linkClasses} onClick={onNavigate}>
-            Purchases
-          </NavLink>
-          <NavLink to="/adblue/fillings" className={linkClasses} onClick={onNavigate}>
-            Filling Records
-          </NavLink>
-          <NavLink to="/adblue/reports" className={linkClasses} onClick={onNavigate}>
-            Reports
-          </NavLink>
-        </NavSection>
-
-        <NavSection title="Tyres" paths={['/tyres']}>
-          <NavLink to="/tyres/stores" className={linkClasses} onClick={onNavigate}>
-            Tyre Stores
-          </NavLink>
-          <NavLink to="/tyres/purchases" className={linkClasses} onClick={onNavigate}>
-            Tyre Purchases
-          </NavLink>
-          <NavLink to="/tyres/assets" className={linkClasses} onClick={onNavigate}>
-            Vehicle Tyres
-          </NavLink>
-          <NavLink to="/tyres/transfers" className={linkClasses} onClick={onNavigate}>
-            Tyre Transfers
-          </NavLink>
-          <NavLink to="/tyres/history" className={linkClasses} onClick={onNavigate}>
-            Tyre History
-          </NavLink>
-          <NavLink to="/tyres/reports" className={linkClasses} onClick={onNavigate}>
-            Tyre Reports
-          </NavLink>
-        </NavSection>
-
-        <NavSection title="Batteries" paths={['/batteries']}>
-          <NavLink to="/batteries" end className={linkClasses} onClick={onNavigate}>
-            All Batteries
-          </NavLink>
-          <NavLink to="/batteries/add" className={linkClasses} onClick={onNavigate}>
-            Add Batteries
-          </NavLink>
-          <NavLink to="/batteries/history" className={linkClasses} onClick={onNavigate}>
-            Battery History
-          </NavLink>
-        </NavSection>
-
-        <NavSection title="Inventory" paths={['/inventory']}>
-          <NavLink to="/inventory/catalog" className={linkClasses} onClick={onNavigate}>
-            Item Catalog
-          </NavLink>
-          <NavLink to="/inventory/movements" className={linkClasses} onClick={onNavigate}>
-            Stock Movements
-          </NavLink>
-          <NavLink to="/inventory/stock" className={linkClasses} onClick={onNavigate}>
-            Stock
-          </NavLink>
-          <NavLink to="/inventory/reports" className={linkClasses} onClick={onNavigate}>
-            Inventory Reports
-          </NavLink>
-        </NavSection>
-
-        <Can roles={['admin']}>
-          <NavSection title="Administration" paths={['/users']}>
-            <NavLink to="/users" className={linkClasses} onClick={onNavigate}>
-              Organization Users
-            </NavLink>
+        {visibleSections.map((section) => (
+          <NavSection key={section.title} title={section.title} paths={section.paths}>
+            {section.links.map((link) => (
+              <NavLink key={link.to} to={link.to} end={link.end} className={linkClasses} onClick={onNavigate}>
+                {link.label}
+              </NavLink>
+            ))}
           </NavSection>
-        </Can>
+        ))}
       </nav>
     </aside>
   );
