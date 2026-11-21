@@ -311,8 +311,9 @@ function SiteChips({ siteIds, siteNames }) {
   );
 }
 
-// Less frequent actions, kept out of the row so the table fits. Closes on an outside click or Esc, and opens upwards
-// when there is no room below.
+// Less frequent actions, kept out of the row so the table fits. The menu opens to the left of the ⋯ button, so the
+// ⋯ buttons of the other rows stay clickable: clicking another user's ⋯ closes this menu and opens theirs. It also
+// closes on an outside click or Esc, and lines up with the button's bottom when there is no room below.
 function MoreActions({ member, onPassword, onStatus }) {
   const [open, setOpen] = useState(false);
   const [upwards, setUpwards] = useState(false);
@@ -365,8 +366,8 @@ function MoreActions({ member, onPassword, onStatus }) {
       {open && (
         <div
           role="menu"
-          className={`absolute right-0 z-30 w-44 overflow-hidden rounded border border-steel-200 bg-surface py-1 shadow-lg ring-1 ring-black/5 ${
-            upwards ? 'bottom-full mb-1' : 'top-full mt-1'
+          className={`absolute right-full z-30 mr-1.5 w-44 overflow-hidden rounded border border-steel-200 bg-surface py-1 shadow-lg ring-1 ring-black/5 ${
+            upwards ? 'bottom-0' : 'top-0'
           }`}
         >
           <button type="button" role="menuitem" className={`${item} text-steel-700`} onClick={() => choose(onPassword)}>
