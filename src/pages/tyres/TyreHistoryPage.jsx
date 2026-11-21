@@ -115,8 +115,9 @@ export function printColumns() {
 }
 
 export default function TyreHistoryPage() {
-  const { role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
   const [filters, setFilters] = useState({ search: '', eventType: '', assetType: '', siteId: '', dateFrom: '', dateTo: '', page: 1, sort: 'eventDate:desc' });
   const [result, setResult] = useState(null);
@@ -181,7 +182,7 @@ export default function TyreHistoryPage() {
 
       <Alert tone="error">{error}</Alert>
 
-      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${isAdmin ? 'lg:grid-cols-3 xl:grid-cols-6' : 'lg:grid-cols-5'}`}>
+      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${picksSite ? 'lg:grid-cols-3 xl:grid-cols-6' : 'lg:grid-cols-5'}`}>
         <Input placeholder="Search tyre ID, brand, size, vehicle no..." title="Search by tyre ID, serial, brand, pattern, size, vehicle / machine number, shop or notes" value={filters.search} onChange={(e) => updateFilter('search', e.target.value)} />
         <Select value={filters.eventType} onChange={(e) => updateFilter('eventType', e.target.value)} aria-label="Activity">
           <option value="">All activities</option>
@@ -196,7 +197,7 @@ export default function TyreHistoryPage() {
           <option value="VEHICLE">Vehicles</option>
           <option value="MACHINERY">Machinery</option>
         </Select>
-        {isAdmin && (
+        {picksSite && (
           <Select value={filters.siteId} onChange={(e) => updateFilter('siteId', e.target.value)} aria-label="Site">
             <option value="">All sites</option>
             {Object.entries(siteNames).map(([siteId, name]) => (
