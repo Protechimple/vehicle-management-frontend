@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usersApi, sitesApi, listAll } from '../api/client';
 import { Alert, Badge, Button, Card, Field, Input, Modal, RoleBadge, Select, Spinner } from '../components/ui';
 import MemberAccessDialog from '../components/access/MemberAccessDialog';
@@ -311,33 +311,83 @@ function SiteChips({ siteIds, siteNames }) {
   );
 }
 
-// Less frequent actions, kept out of the row so the table fits.
+// Less frequent actions, kept out of the row so the table fits. Closes on an outside click or Esc, and opens upwards
+// when there is no room below.
 function MoreActions({ member, onPassword, onStatus }) {
-  const close = (event) => event.currentTarget.closest('details')?.removeAttribute('open');
-  const item = 'block w-full px-3 py-2 text-left text-sm hover:bg-steel-50';
+  const [open, setOpen] = useState(false);
+  const [upwards, setUpwards] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onPointer = (event) => {
+      if (!ref.current?.contains(event.target)) setOpen(false);
+    };
+    const onKey = (event) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  function toggle() {
+    if (!open) {
+      const bottom = ref.current?.getBoundingClientRect().bottom ?? 0;
+      setUpwards(bottom + 110 > window.innerHeight);
+    }
+    setOpen((value) => !value);
+  }
+
+  function choose(action) {
+    setOpen(false);
+    action();
+  }
+
+  const item = 'block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-steel-50 focus:bg-steel-50 focus:outline-none';
   return (
-    <details className="relative">
-      <summary
+    <div ref={ref} className="relative">
+      <button
+        type="button"
         aria-label={`More actions for ${member.name}`}
-        className="flex h-7.5 cursor-pointer list-none items-center rounded border border-steel-200 bg-surface px-2 text-steel-600 hover:bg-steel-50 [&::-webkit-details-marker]:hidden"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={toggle}
+        className={`flex h-7.5 items-center rounded border px-2 text-steel-600 transition-colors hover:bg-steel-50 ${
+          open ? 'border-brand-500 bg-steel-50' : 'border-steel-200 bg-surface'
+        }`}
       >
         <span aria-hidden="true">⋯</span>
-      </summary>
-      <div className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded border border-steel-200 bg-surface shadow-lg">
-        <button type="button" className={`${item} text-steel-700`} onClick={(e) => { close(e); onPassword(); }}>
-          Set new password
-        </button>
-        <button
-          type="button"
-          className={`${item} ${member.status === 'active' ? 'text-danger-600' : 'text-steel-700'}`}
-          onClick={(e) => { close(e); onStatus(); }}
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className={`absolute right-0 z-30 w-44 overflow-hidden rounded border border-steel-200 bg-surface py-1 shadow-lg ring-1 ring-black/5 ${
+            upwards ? 'bottom-full mb-1' : 'top-full mt-1'
+          }`}
         >
-          {member.status === 'active' ? 'Deactivate' : 'Reactivate'}
-        </button>
-      </div>
-    </details>
+          <button type="button" role="menuitem" className={`${item} text-steel-700`} onClick={() => choose(onPassword)}>
+            Set new password
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className={`${item} ${member.status === 'active' ? 'text-danger-600' : 'text-success-600'}`}
+            onClick={() => choose(onStatus)}
+          >
+            {member.status === 'active' ? 'Deactivate' : 'Reactivate'}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
+
+// A deactivated user's details are shown faded; their status and actions stay at full strength.
+const dim = (member) => (member.status === 'active' ? '' : 'opacity-60');
 
 function SummaryTile({ label, value, tone }) {
   return (
@@ -508,8 +558,8 @@ export default function UsersPage() {
                 </tr>
               ) : (
                 rows.map((m) => (
-                  <tr key={m.id} className={`hover:bg-steel-50 ${m.status === 'active' ? '' : 'opacity-60'}`}>
-                    <td className="px-4 py-3">
+                  <tr key={m.id} className="hover:bg-steel-50">
+                    <td className={`px-4 py-3 ${dim(m)}`}>
                       <div className="flex items-center gap-2.5">
                         <span
                           aria-hidden="true"
@@ -523,7 +573,7 @@ export default function UsersPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap">
+                    <td className={`px-3 py-3 whitespace-nowrap ${dim(m)}`}>
                       <RoleBadge role={m.role} />
                       {m.role === 'site_manager' && reportCounts[m.id] > 0 && (
                         <div className="mt-1 text-xs text-steel-500">
@@ -531,10 +581,10 @@ export default function UsersPage() {
                         </div>
                       )}
                     </td>
-                    <td className="px-3 py-3">
+                    <td className={`px-3 py-3 ${dim(m)}`}>
                       <SiteChips siteIds={m.siteIds} siteNames={siteNames} />
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-steel-700">{names[m.managerId] ?? <span className="text-steel-400">—</span>}</td>
+                    <td className={`px-3 py-3 whitespace-nowrap text-steel-700 ${dim(m)}`}>{names[m.managerId] ?? <span className="text-steel-400">—</span>}</td>
                     <td className="px-3 py-3 whitespace-nowrap">
                       <StatusBadge status={m.status} />
                       <div className="mt-1 text-xs text-steel-500">{m.lastLoginAt ? formatDate(m.lastLoginAt) : 'Never signed in'}</div>
