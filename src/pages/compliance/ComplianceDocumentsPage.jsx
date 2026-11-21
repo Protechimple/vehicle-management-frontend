@@ -256,7 +256,7 @@ export default function ComplianceDocumentsPage() {
           <Select value={filters.siteId} onChange={(e) => updateFilter('siteId', e.target.value)} aria-label="Site">
             <option value="">All sites</option>
             {Object.entries(siteNames).map(([siteId, name]) => (
-              <option key={siteId} value={siteId}>
+              <option key={siteId} value={siteId} data-added={siteId}>
                 {name}
               </option>
             ))}

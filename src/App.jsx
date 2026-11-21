@@ -34,13 +34,16 @@ import StockAdjustmentDetailPage from './pages/inventory/StockAdjustmentDetailPa
 import StockTransferFormPage from './pages/inventory/StockTransferFormPage';
 import StockTransferDetailPage from './pages/inventory/StockTransferDetailPage';
 import InventoryReportsPage from './pages/inventory/InventoryReportsPage';
-import TyreStockPage from './pages/tyres/TyreStockPage';
+import TyreStoresPage from './pages/tyres/TyreStoresPage';
+import TyreDetailPage from './pages/tyres/TyreDetailPage';
+import VehicleTyresPage from './pages/tyres/VehicleTyresPage';
 import TyrePurchasesPage from './pages/tyres/TyrePurchasesPage';
 import TyrePurchaseFormPage from './pages/tyres/TyrePurchaseFormPage';
 import TyrePurchaseDetailPage from './pages/tyres/TyrePurchaseDetailPage';
-import TyreFittingPage from './pages/tyres/TyreFittingPage';
-import TyreFitFormPage from './pages/tyres/TyreFitFormPage';
 import TyreReportsPage from './pages/tyres/TyreReportsPage';
+import TyreHistoryPage from './pages/tyres/TyreHistoryPage';
+import TyreTransfersPage from './pages/tyres/TyreTransfersPage';
+import TyreTransferFormPage from './pages/tyres/TyreTransferFormPage';
 import BatteriesPage from './pages/batteries/BatteriesPage';
 import AddBatteriesPage from './pages/batteries/AddBatteriesPage';
 import BatteryHistoryPage from './pages/batteries/BatteryHistoryPage';
@@ -231,14 +234,19 @@ export default function App() {
         <Route path="/adblue/fillings/:id/edit" element={<ProtectedRoute anyOf={[['ADBLUE', 'UPDATE']]}><AdBlueFillingFormPage /></ProtectedRoute>} />
         <Route path="/adblue/reports" element={<ProtectedRoute anyOf={[['ADBLUE', 'READ']]}><AdBlueReportsPage /></ProtectedRoute>} />
 
-        <Route path="/tyres" element={<Navigate to="/tyres/stock" replace />} />
-        <Route path="/tyres/stock" element={<ProtectedRoute anyOf={[['TYRE', 'READ']]}><TyreStockPage /></ProtectedRoute>} />
+        <Route path="/tyres" element={<Navigate to="/tyres/stores" replace />} />
+        <Route path="/tyres/stores" element={<ProtectedRoute anyOf={[['TYRE', 'READ']]}><TyreStoresPage /></ProtectedRoute>} />
+        <Route path="/tyres/stock" element={<Navigate to="/tyres/stores" replace />} />
+        <Route path="/tyres/assets" element={<ProtectedRoute anyOf={[['TYRE', 'READ']]}><VehicleTyresPage /></ProtectedRoute>} />
+        <Route path="/tyres/fitting" element={<Navigate to="/tyres/assets" replace />} />
         <Route path="/tyres/purchases" element={<ProtectedRoute anyOf={[['TYRE', 'READ']]}><TyrePurchasesPage /></ProtectedRoute>} />
         <Route path="/tyres/purchases/new" element={<ProtectedRoute anyOf={[['TYRE', 'CREATE']]}><TyrePurchaseFormPage /></ProtectedRoute>} />
         <Route path="/tyres/purchases/:id" element={<ProtectedRoute anyOf={[['TYRE', 'READ']]}><TyrePurchaseDetailPage /></ProtectedRoute>} />
-        <Route path="/tyres/fitting" element={<ProtectedRoute anyOf={[['TYRE', 'READ']]}><TyreFittingPage /></ProtectedRoute>} />
-        <Route path="/tyres/fitting/new" element={<ProtectedRoute anyOf={[['TYRE', 'CREATE']]}><TyreFitFormPage /></ProtectedRoute>} />
         <Route path="/tyres/reports" element={<ProtectedRoute allOf={[['TYRE', 'READ'], ['REPORTS', 'VIEW']]}><TyreReportsPage /></ProtectedRoute>} />
+        <Route path="/tyres/history" element={<ProtectedRoute anyOf={[['TYRE', 'READ']]}><TyreHistoryPage /></ProtectedRoute>} />
+        <Route path="/tyres/transfers" element={<ProtectedRoute anyOf={[['TYRE', 'READ']]}><TyreTransfersPage /></ProtectedRoute>} />
+        <Route path="/tyres/transfers/new" element={<ProtectedRoute anyOf={[['TYRE', 'TRANSFER']]}><TyreTransferFormPage /></ProtectedRoute>} />
+        <Route path="/tyres/:id" element={<ProtectedRoute anyOf={[['TYRE', 'READ']]}><TyreDetailPage /></ProtectedRoute>} />
 
         <Route path="/batteries" element={<ProtectedRoute anyOf={[['BATTERY', 'READ']]}><BatteriesPage /></ProtectedRoute>} />
         <Route path="/batteries/add" element={<ProtectedRoute anyOf={[['BATTERY', 'CREATE']]}><AddBatteriesPage /></ProtectedRoute>} />

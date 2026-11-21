@@ -4,7 +4,7 @@ import { tyresApi } from '../../api/client';
 import { Alert, Badge, Button, Card, Spinner, Table } from '../../components/ui';
 import Can from '../../components/Can';
 import DeleteWordModal from '../../components/DeleteWordModal';
-import { formatCurrency, formatDateOnly, formatNumber } from '../../config/tyres';
+import { STATUS_BY_VALUE, formatCurrency, formatNumber, formatWhen } from '../../config/tyres';
 
 function Detail({ label, children }) {
   return (
@@ -50,7 +50,7 @@ export default function TyrePurchaseDetailPage() {
       const response = await tyresApi.cancelPurchase(purchase.id, 'DELETE');
       setPurchase(response.data);
       setCancelling(false);
-      setNotice(`${purchase.purchaseNumber} cancelled — its tyres were taken out of stock.`);
+      setNotice(`${purchase.purchaseNumber} cancelled — its tyres were removed from the New Tyre Store.`);
     } catch (err) {
       setCancelError(err.message);
     } finally {
@@ -99,7 +99,7 @@ export default function TyrePurchaseDetailPage() {
           </Link>
           <h1 className="mt-1 text-xl font-semibold text-steel-900">{purchase.purchaseNumber}</h1>
           <div className="mt-2">
-            <Badge tone={active ? 'success' : 'neutral'}>{active ? 'Received into stock' : 'Cancelled'}</Badge>
+            <Badge tone={active ? 'success' : 'neutral'}>{active ? 'Added to New Tyre Store' : 'Cancelled'}</Badge>
           </div>
         </div>
         {active && (
@@ -123,7 +123,7 @@ export default function TyrePurchaseDetailPage() {
         <dl className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <Detail label="Site">{purchase.siteName ?? '—'}</Detail>
           <Detail label="Supplier">{purchase.supplierName ?? '—'}</Detail>
-          <Detail label="Purchase date">{formatDateOnly(purchase.purchaseDate)}</Detail>
+          <Detail label="Purchase date & time">{formatWhen(purchase.purchaseDate, purchase.purchaseTime)}</Detail>
           <Detail label="Bill / invoice no.">{purchase.billNumber ?? '—'}</Detail>
           {purchase.notes && (
             <div className="sm:col-span-2 lg:col-span-4">
@@ -156,10 +156,23 @@ export default function TyrePurchaseDetailPage() {
         </div>
       </Card>
 
+      {purchase.tyres?.length > 0 && (
+        <Card title="Tyre IDs" subtitle="Each tyre in this purchase has its own ID." className="mt-4">
+          <div className="flex flex-wrap gap-1.5">
+            {purchase.tyres.map((t) => (
+              <Link key={t.id} to={`/tyres/${t.id}`} className="rounded border border-steel-200 px-2 py-0.5 text-sm font-semibold text-brand-600 tabular-nums hover:bg-brand-50">
+                {t.tyreCode}
+                {t.status !== 'new' && <span className="ml-1 text-xs font-normal text-steel-500">({STATUS_BY_VALUE[t.status]?.short})</span>}
+              </Link>
+            ))}
+          </div>
+        </Card>
+      )}
+
       <DeleteWordModal
         open={cancelling}
         title={`Cancel ${purchase.purchaseNumber}?`}
-        description="Its tyres are taken back out of stock. This is only possible while none of them have been fitted."
+        description="Its tyres are removed from the New Tyre Store. This is only possible while none of them have been used."
         onCancel={() => setCancelling(false)}
         onConfirm={handleCancel}
         pending={pending}

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import BrandingButton from '../components/BrandingButton';
+import ThemeToggle from '../components/ThemeToggle';
 
 const linkClasses = ({ isActive }) =>
   [
@@ -99,9 +101,11 @@ const NAV_SECTIONS = [
     title: 'Tyres',
     paths: ['/tyres'],
     links: [
-      { to: '/tyres/stock', label: 'Tyre Stock', anyOf: VIEW('TYRE') },
+      { to: '/tyres/stores', label: 'Tyre Stores', anyOf: VIEW('TYRE') },
       { to: '/tyres/purchases', label: 'Tyre Purchases', anyOf: VIEW('TYRE') },
-      { to: '/tyres/fitting', label: 'Tyre Fitting', anyOf: VIEW('TYRE') },
+      { to: '/tyres/assets', label: 'Vehicle Tyres', anyOf: VIEW('TYRE') },
+      { to: '/tyres/transfers', label: 'Tyre Transfers', anyOf: VIEW('TYRE') },
+      { to: '/tyres/history', label: 'Tyre History', anyOf: VIEW('TYRE') },
       { to: '/tyres/reports', label: 'Tyre Reports', allOf: [['TYRE', 'READ'], ['REPORTS', 'VIEW']] },
     ],
   },
@@ -167,8 +171,13 @@ export default function Sidebar({ open, onNavigate }) {
         open ? 'translate-x-0' : '-translate-x-full',
       ].join(' ')}
     >
-      <div className="flex h-16 shrink-0 items-center border-b border-white/10 px-5">
+      <div className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-white/10 px-5">
         <span className="text-lg font-bold tracking-[0.06em] text-white">VMMS</span>
+        {/* On phones these move here from the header (see Header.jsx). */}
+        <div className="flex items-center gap-1 sm:hidden">
+          <ThemeToggle tone="nav" />
+          <BrandingButton tone="nav" />
+        </div>
       </div>
 
       <nav className="flex flex-col gap-0.5 px-2.5 py-3">

@@ -436,18 +436,6 @@ export const inventoryReportsApi = {
   partsByAsset: (params, options) => api.get(`/inventory-reports/parts-by-asset${toQueryString(params)}`, options),
 };
 
-export const tyreApi = {
-  list: (params) => api.get(`/tyres${toQueryString(params)}`),
-  get: (id) => api.get(`/tyres/${id}`),
-  create: (payload) => api.post('/tyres', payload),
-  update: (id, payload) => api.put(`/tyres/${id}`, payload),
-  remove: (id, confirmation) => api.delete(`/tyres/${id}`, { confirmation }),
-  restore: (id) => api.post(`/tyres/${id}/restore`),
-  install: (id, payload) => api.post(`/tyres/${id}/install`, payload),
-  fitments: (params) => api.get(`/tyres/history${toQueryString(params)}`),
-  vehiclePositions: (vehicleId) => api.get(`/tyres/vehicles/${vehicleId}/positions`),
-}
-
 // What each role may do in the organization; the Admin's alone.
 export const accessApi = {
   roles: () => api.get('/access/roles'),
@@ -513,15 +501,25 @@ export const tyresApi = {
   purchase: (id) => api.get(`/tyres/purchases/${id}`),
   createPurchase: (payload) => api.post('/tyres/purchases', payload),
   cancelPurchase: (id, confirmation) => api.delete(`/tyres/purchases/${id}`, { confirmation }),
-  stock: (params) => api.get(`/tyres/stock${toQueryString(params)}`),
-  fitments: (params) => api.get(`/tyres/fitments${toQueryString(params)}`),
-  fit: (payload) => api.post('/tyres/fitments', payload),
-  updateFitment: (id, payload) => api.put(`/tyres/fitments/${id}`, payload),
+  summary: (params) => api.get(`/tyres/summary${toQueryString(params)}`),
+  history: (params, options) => api.get(`/tyres/history${toQueryString(params)}`, options),
+  list: (params) => api.get(`/tyres/items${toQueryString(params)}`),
+  get: (id) => api.get(`/tyres/items/${id}`),
+  update: (id, payload) => api.put(`/tyres/items/${id}`, payload),
+  addSpares: (payload) => api.post('/tyres/items/spares', payload),
+  fit: (id, payload) => api.post(`/tyres/items/${id}/fit`, payload),
+  remove: (id, payload) => api.post(`/tyres/items/${id}/remove`, payload),
+  puncture: (id, payload) => api.post(`/tyres/items/${id}/puncture`, payload),
+  sendForRemould: (id, payload) => api.post(`/tyres/items/${id}/remould`, payload),
+  remouldBack: (id, payload) => api.post(`/tyres/items/${id}/remould-back`, payload),
+  scrap: (id, payload) => api.post(`/tyres/items/${id}/scrap`, payload),
+  assetSetups: (params) => api.get(`/tyres/assets${toQueryString(params)}`),
+  assetTyres: (assetType, assetId) => api.get(`/tyres/assets/${assetType}/${encodeURIComponent(assetId)}`),
+  saveLayout: (assetType, assetId, payload) => api.put(`/tyres/assets/${assetType}/${encodeURIComponent(assetId)}/layout`, payload),
+  transfers: (params) => api.get(`/tyres/transfers${toQueryString(params)}`),
+  createTransfer: (payload) => api.post('/tyres/transfers', payload),
   assetReport: (params, options) => api.get(`/tyres/reports/assets${toQueryString(params)}`, options),
-  assetTyres: (params, options) => api.get(`/tyres/reports/assets/tyres${toQueryString(params)}`, options),
   costReport: (params, options) => api.get(`/tyres/reports/costs${toQueryString(params)}`, options),
-  costsByType: (params, options) => api.get(`/tyres/reports/costs/by-type${toQueryString(params)}`, options),
-  costsBySupplier: (params, options) => api.get(`/tyres/reports/costs/by-supplier${toQueryString(params)}`, options),
 };
 
 export const batteriesApi = {
