@@ -6,6 +6,10 @@ const TONES = {
   danger: 'bg-danger-50 text-danger-600',
 };
 
+import { roleLabel } from '../../config/permissions';
+
+const ROLE_TONES = { admin: 'warning', site_manager: 'brand', supervisor: 'neutral', inventory_supervisor: 'success' };
+
 export default function Badge({ tone = 'neutral', children }) {
   return (
     <span
@@ -17,5 +21,5 @@ export default function Badge({ tone = 'neutral', children }) {
 }
 
 export function RoleBadge({ role }) {
-  return <Badge tone={role === 'admin' ? 'warning' : 'neutral'}>{role}</Badge>;
+  return <Badge tone={ROLE_TONES[role] ?? 'neutral'}>{roleLabel(role)}</Badge>;
 }

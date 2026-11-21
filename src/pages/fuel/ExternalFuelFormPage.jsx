@@ -27,11 +27,12 @@ export default function ExternalFuelFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
-  const { user, role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { user, role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
 
   const [form, setForm] = useState({
-    siteId: isAdmin ? '' : String(user?.siteId ?? ''),
+    siteId: picksSite ? '' : String(user?.siteId ?? ''),
     fuelType: 'Diesel',
     quantity: '',
     entryDate: todayDateOnly(),
@@ -104,7 +105,7 @@ export default function ExternalFuelFormPage() {
   const quantity = Number(form.quantity);
   const estimatedValue = isEdit ? existing?.amount : stock && quantity > 0 ? Math.round(quantity * stock.averageCost * 100) / 100 : null;
   const siteName = isEdit ? existing?.siteName : sites?.find((s) => String(s.id) === form.siteId)?.name;
-  const noSiteAssigned = !isAdmin && !user?.siteId;
+  const noSiteAssigned = !picksSite && !user?.siteId;
 
   function update(field) {
     return (event) => {
@@ -170,7 +171,7 @@ export default function ExternalFuelFormPage() {
       } else {
         await externalFuelApi.create({
           ...payload,
-          siteId: isAdmin ? Number(form.siteId) : undefined,
+          siteId: picksSite ? Number(form.siteId) : undefined,
           fuelType: form.fuelType,
           quantity,
         });
@@ -222,7 +223,7 @@ export default function ExternalFuelFormPage() {
           <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2 lg:grid-cols-3">
             <Field label="Site" required error={errors.siteId}>
               {({ id: fieldId, invalid, describedBy }) =>
-                isAdmin && !isEdit ? (
+                picksSite && !isEdit ? (
                   <Select id={fieldId} invalid={invalid} describedBy={describedBy} value={form.siteId} onChange={update('siteId')}>
                     <option value="">Select a site</option>
                     {sites.map((s) => (

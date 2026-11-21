@@ -82,8 +82,9 @@ function TyreTypesDialog({ open, onClose }) {
 }
 
 export default function TyreStockPage() {
-  const { role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
   const [filters, setFilters] = useState({ search: '', siteId: '' });
   const [data, setData] = useState(null);
@@ -175,9 +176,9 @@ export default function TyreStockPage() {
 
       <Alert tone="error">{error}</Alert>
 
-      <div className={`mb-4 grid gap-3 sm:max-w-xl ${isAdmin ? 'sm:grid-cols-2' : ''}`}>
+      <div className={`mb-4 grid gap-3 sm:max-w-xl ${picksSite ? 'sm:grid-cols-2' : ''}`}>
         <Input placeholder="Search brand or size..." value={filters.search} onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))} />
-        {isAdmin && (
+        {picksSite && (
           <Select aria-label="Site" value={filters.siteId} onChange={(e) => setFilters((f) => ({ ...f, siteId: e.target.value }))}>
             <option value="">All sites</option>
             {Object.entries(siteNames).map(([siteId, name]) => (

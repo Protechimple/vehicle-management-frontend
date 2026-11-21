@@ -190,7 +190,9 @@ export default function VehicleDetailPage() {
         </dl>
       </Card>
 
-      <AssetDocumentsCard assetType="VEHICLE" assetId={vehicle.assetId} />
+      <Can resource="DOCUMENT" action="READ">
+        <AssetDocumentsCard assetType="VEHICLE" assetId={vehicle.assetId} />
+      </Can>
 
       <AssetCostCard assetType="VEHICLE" asset={vehicle} />
 

@@ -52,8 +52,9 @@ function appliedFilters(active, assetFilter, siteNames) {
 
 export default function MaintenanceHistoryPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
   const now = useNow();
 
@@ -215,7 +216,7 @@ export default function MaintenanceHistoryPage() {
         </div>
       )}
 
-      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${isAdmin ? 'lg:grid-cols-4 xl:grid-cols-8' : 'lg:grid-cols-4 xl:grid-cols-7'}`}>
+      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${picksSite ? 'lg:grid-cols-4 xl:grid-cols-8' : 'lg:grid-cols-4 xl:grid-cols-7'}`}>
         <Input placeholder="Search asset ID, RCPL or registration no..." title="Search by asset ID, machinery RCPL or vehicle registration number" value={filters.search} onChange={(e) => updateFilter('search', e.target.value)} disabled={Boolean(assetFilter)} />
         <Select value={assetFilter ? assetFilter.assetType : filters.assetType} onChange={(e) => updateFilter('assetType', e.target.value)} disabled={Boolean(assetFilter)} aria-label="Asset type">
           <option value="">All asset types</option>
@@ -233,7 +234,7 @@ export default function MaintenanceHistoryPage() {
           <option value="in_progress">In progress</option>
           <option value="resolved">Resolved</option>
         </Select>
-        {isAdmin && (
+        {picksSite && (
           <Select value={filters.siteId} onChange={(e) => updateFilter('siteId', e.target.value)} aria-label="Site">
             <option value="">All sites</option>
             {Object.entries(siteNames).map(([siteId, name]) => (

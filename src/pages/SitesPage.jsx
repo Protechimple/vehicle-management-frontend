@@ -17,9 +17,9 @@ function archiveDescription(site, impact) {
   const base = `${site?.name} will be archived and disappear from the site list. Assets currently assigned to it keep their assignment.`;
   if (!impact) return `${base} Checking what is at this site…`;
   if (impact.failed) return base;
-  const here = `It has ${plural(impact.assets, 'asset')} and ${plural(impact.supervisors, 'supervisor')}.`;
+  const here = `It has ${plural(impact.assets, 'asset')} and ${plural(impact.supervisors, 'user')} working there.`;
   const warning =
-    impact.supervisors > 0 ? " Its supervisors can't add vehicles or machinery until you move them to another site." : '';
+    impact.supervisors > 0 ? " The people working there can't add records for it until you move them to another site." : '';
   return `${base} ${here}${warning}`;
 }
 
@@ -134,7 +134,7 @@ export default function SitesPage() {
       .then(([assetsResponse, usersResponse]) => {
         if (cancelled) return;
         const supervisors = usersResponse.data.filter(
-          (user) => user.role === 'supervisor' && user.status === 'active' && user.siteId === archiving.id
+          (user) => user.role !== 'admin' && user.status === 'active' && (user.siteIds ?? [user.siteId]).map(Number).includes(Number(archiving.id))
         );
         setArchiveImpact({ assets: assetsResponse.data.length, supervisors: supervisors.length });
       })

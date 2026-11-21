@@ -2,10 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { dashboardApi } from '../api/client';
 import { Alert, Select, Spinner } from '../components/ui';
-import { hasPermission } from '../config/permissions';
 import { DocTypeTable, useComplianceDashboard } from '../components/dashboard/ComplianceOverview';
 import { RunningCostCard, UsageCard } from '../components/dashboard/RunningCost';
 import MaintenanceCard, { useMaintenanceSummary } from '../components/dashboard/MaintenanceCard';
+import { SiteBreakdownCard, TeamCard, useSiteBreakdown } from '../components/dashboard/SiteBreakdown';
 import { useAuth } from '../context/AuthContext';
 import useSiteNames from '../hooks/useSiteNames';
 
@@ -42,7 +42,7 @@ function CardPlaceholder({ label }) {
 }
 
 export default function DashboardPage() {
-  const { user, role } = useAuth();
+  const { user, isAdmin, canPickSite, siteIds, can } = useAuth();
   const siteNames = useSiteNames();
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -111,10 +111,9 @@ export default function DashboardPage() {
     };
   }, [siteId, refreshKey]);
 
-  const isAdmin = role === 'admin';
-  const showCompliance = hasPermission(role, 'COMPLIANCE', 'READ');
+  const showCompliance = can('COMPLIANCE', 'READ');
   const compliance = useComplianceDashboard({ enabled: showCompliance && refreshKey > 0, siteId, refreshKey });
-  const showMaintenance = hasPermission(role, 'MAINTENANCE', 'READ');
+  const showMaintenance = can('MAINTENANCE', 'READ');
   const maintenance = useMaintenanceSummary({ enabled: showMaintenance && refreshKey > 0, siteId, refreshKey });
 
   const siteName = user?.siteId ? siteNames[user.siteId] : null;
@@ -122,35 +121,52 @@ export default function DashboardPage() {
     () => Object.entries(siteNames).sort(([, a], [, b]) => a.localeCompare(b)),
     [siteNames]
   );
-  const linkSiteId = isAdmin && siteId ? siteId : undefined;
+  const linkSiteId = canPickSite && siteId ? siteId : undefined;
+
+  // What the dashboard shows follows what the user may open: costs need fuel or stock access, and so on.
+  const showFuel = can('FUEL', 'READ');
+  const showParts = can('STOCK', 'READ');
+  const showCosts = showFuel || showParts;
+  const showTeam = can('USERS', 'VIEW_TEAM');
+  // Several sites in scope: compare them side by side.
+  const showBreakdown = !siteId && (isAdmin ? siteOptions.length > 1 : (siteIds?.length ?? 0) > 1);
+  const breakdown = useSiteBreakdown({ enabled: showBreakdown && refreshKey > 0, refreshKey });
 
   const monthly = siteId ? siteCost?.monthly : data?.monthly;
   const currentMonth = monthly?.[monthly.length - 1];
   const month = monthly ? (monthly.find((m) => m.month === selectedMonth) ?? currentMonth) : null;
 
-  const title = isAdmin ? (siteId ? `Overview · ${siteNames[siteId] ?? 'Site'}` : 'Overview') : `Overview · ${siteName ?? 'Your site'}`;
+  const title = siteId
+    ? `Overview · ${siteNames[siteId] ?? 'Site'}`
+    : isAdmin
+      ? 'Overview'
+      : canPickSite
+        ? `Overview · All your sites (${siteIds.length})`
+        : `Overview · ${siteName ?? 'Your site'}`;
 
   const fleet = siteId ? siteFleet?.fleet : data?.fleet;
   const fleetCount = (key) => (fleet ? numberFormat.format(fleet[key]) : '—');
 
   const kpis = data
     ? [
-        { key: 'vehicles', label: 'Vehicles', value: fleetCount('vehicles'), detail: 'Active', to: '/vehicles' },
-        { key: 'machinery', label: 'Machinery', value: fleetCount('machinery'), detail: 'Active', to: '/machinery' },
+        can('VEHICLE', 'READ') && { key: 'vehicles', label: 'Vehicles', value: fleetCount('vehicles'), detail: 'Active', to: '/vehicles' },
+        can('MACHINERY', 'READ') && { key: 'machinery', label: 'Machinery', value: fleetCount('machinery'), detail: 'Active', to: '/machinery' },
         isAdmin
           ? { key: 'sites', label: 'Sites', value: numberFormat.format(data.fleet.sites), detail: 'Active', to: '/sites' }
-          : { key: 'site', label: 'Your site', value: siteName ?? '—', detail: 'Assigned', valueClass: 'text-lg', to: '/site-management' },
-      ]
+          : canPickSite
+            ? { key: 'sites', label: 'Your sites', value: numberFormat.format(siteIds.length), detail: 'Assigned' }
+            : { key: 'site', label: 'Your site', value: siteName ?? '—', detail: 'Assigned', valueClass: 'text-lg', to: '/site-management' },
+      ].filter(Boolean)
     : [];
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-3">
       <div className="flex min-h-9 flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
         <h1 className="min-w-0 truncate text-xs font-semibold tracking-wider text-steel-900 uppercase">{title}</h1>
-        {isAdmin && (
+        {canPickSite && (
           <div className="w-full sm:w-56 sm:shrink-0">
             <Select searchable aria-label="Site for compliance and running cost" value={siteId} onChange={(e) => setSiteId(e.target.value)}>
-              <option value="">All sites</option>
+              <option value="">{isAdmin ? 'All sites' : 'All your sites'}</option>
               {siteOptions.map(([id, name]) => (
                 <option key={id} value={id}>
                   {name}
@@ -178,20 +194,39 @@ export default function DashboardPage() {
 
           <Alert tone="error">{fleetError}</Alert>
 
+          {(showBreakdown || showTeam) && (
+            <div className={`grid gap-3 ${showBreakdown && showTeam ? 'xl:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]' : ''}`}>
+              {showBreakdown &&
+                (breakdown.error ? (
+                  <Alert tone="error">{breakdown.error}</Alert>
+                ) : breakdown.data ? (
+                  <SiteBreakdownCard data={breakdown.data} onSelectSite={setSiteId} />
+                ) : (
+                  <CardPlaceholder label="Loading sites" />
+                ))}
+              {showTeam && <TeamCard refreshKey={refreshKey} />}
+            </div>
+          )}
+
           <div
             className={`grid gap-3 ${
-              showMaintenance ? 'xl:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)_minmax(0,1.25fr)]' : 'xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]'
+              showCosts && showMaintenance
+                ? 'xl:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)_minmax(0,1.25fr)]'
+                : showCosts
+                  ? 'xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]'
+                  : ''
             }`}
           >
-            {costError ? (
-              <Alert tone="error">{costError}</Alert>
-            ) : month ? (
-              <RunningCostCard trend={monthly} selected={month.month} onSelect={setSelectedMonth} />
-            ) : (
-              <CardPlaceholder label="Loading site costs" />
-            )}
+            {showCosts &&
+              (costError ? (
+                <Alert tone="error">{costError}</Alert>
+              ) : month ? (
+                <RunningCostCard trend={monthly} selected={month.month} onSelect={setSelectedMonth} showFuel={showFuel} showParts={showParts} />
+              ) : (
+                <CardPlaceholder label="Loading site costs" />
+              ))}
 
-            {month ? <UsageCard month={month} /> : !costError && <CardPlaceholder label="Loading usage" />}
+            {showCosts && (month ? <UsageCard month={month} showFuel={showFuel} showParts={showParts} /> : !costError && <CardPlaceholder label="Loading usage" />)}
 
             {showMaintenance &&
               (maintenance.error ? (

@@ -10,8 +10,9 @@ export default function AdBlueFillingFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
-  const { role, user } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, user, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
 
   const [form, setForm] = useState({ assetType: 'VEHICLE', assetId: '', siteId: '', fillingDate: todayDateOnly(), quantity: '' });
@@ -28,7 +29,7 @@ export default function AdBlueFillingFormPage() {
   useEffect(() => {
     listAll(vehiclesApi.list).then((r) => setVehicles(r.data)).catch(() => setVehicles([]));
     listAll(machineryApi.list, { sort: 'rcpl:asc' }).then((r) => setMachinery(r.data)).catch(() => setMachinery([]));
-    if (isAdmin && !isEdit) listAll(sitesApi.list).then((r) => setSites(r.data)).catch(() => setSites([]));
+    if (picksSite && !isEdit) listAll(sitesApi.list).then((r) => setSites(r.data)).catch(() => setSites([]));
     if (!isEdit) return;
     adblueApi
       .getFilling(id)
@@ -37,13 +38,13 @@ export default function AdBlueFillingFormPage() {
         setForm({ assetType: r.assetType, assetId: r.assetId, siteId: String(r.siteId), fillingDate: r.fillingDate, quantity: String(r.quantity) });
       })
       .catch((err) => setLoadError(err.message));
-  }, [id, isEdit, isAdmin]);
+  }, [id, isEdit, picksSite]);
 
   const assetOptions = useMemo(() => ((form.assetType === 'VEHICLE' ? vehicles : machinery) ?? []).filter((a) => a.status === 'active'), [vehicles, machinery, form.assetType]);
   const selectedAsset = assetOptions.find((a) => a.assetId === form.assetId) ?? null;
   const keepExistingOption = existing && existing.assetType === form.assetType && !assetOptions.some((a) => a.assetId === existing.assetId);
 
-  const stockSiteId = isAdmin ? form.siteId : user?.siteId;
+  const stockSiteId = picksSite ? form.siteId : user?.siteId;
 
   useEffect(() => {
     setStock(null);
@@ -71,7 +72,7 @@ export default function AdBlueFillingFormPage() {
       const { value } = event.target;
       setForm((f) => {
         if (field === 'assetType') return { ...f, assetType: value, assetId: '' };
-        if (field === 'assetId' && isAdmin && !isEdit) {
+        if (field === 'assetId' && picksSite && !isEdit) {
           const asset = assetOptions.find((a) => a.assetId === value);
           return { ...f, assetId: value, siteId: asset?.currentSiteId ? String(asset.currentSiteId) : f.siteId };
         }
@@ -84,7 +85,7 @@ export default function AdBlueFillingFormPage() {
   function validate() {
     const found = {};
     if (!form.assetId) found.assetId = form.assetType === 'VEHICLE' ? 'Select a vehicle.' : 'Select a machine.';
-    if (isAdmin && !isEdit && !form.siteId) found.siteId = 'Choose the site this AdBlue was taken from.';
+    if (picksSite && !isEdit && !form.siteId) found.siteId = 'Choose the site this AdBlue was taken from.';
     if (!form.fillingDate) found.fillingDate = 'Enter the filling date.';
     else if (form.fillingDate > todayDateOnly()) found.fillingDate = 'The date cannot be in the future.';
     if (form.quantity === '') found.quantity = 'Enter the litres filled.';
@@ -105,7 +106,7 @@ export default function AdBlueFillingFormPage() {
     setSubmitting(true);
     try {
       if (isEdit) await adblueApi.updateFilling(id, payload);
-      else await adblueApi.createFilling({ ...payload, siteId: isAdmin ? Number(form.siteId) : undefined });
+      else await adblueApi.createFilling({ ...payload, siteId: picksSite ? Number(form.siteId) : undefined });
       navigate('/adblue/fillings', { state: { message: isEdit ? 'AdBlue filling updated.' : 'AdBlue filling recorded.' } });
     } catch (err) {
       setSubmitError(err.message);
@@ -182,7 +183,7 @@ export default function AdBlueFillingFormPage() {
 
             <Field label={isVehicle ? 'Registration number' : 'RCPL'}>{({ id: fieldId }) => <Input id={fieldId} value={assetNumber ?? ''} placeholder="Select an asset first" disabled />}</Field>
 
-            {isAdmin && !isEdit ? (
+            {picksSite && !isEdit ? (
               <Field label="Site" required error={errors.siteId} hint="Filled in from the selected asset. Stock is taken from this site.">
                 {({ id: fieldId, invalid, describedBy }) => (
                   <Select id={fieldId} invalid={invalid} describedBy={describedBy} value={form.siteId} onChange={update('siteId')}>

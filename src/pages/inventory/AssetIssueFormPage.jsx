@@ -42,12 +42,13 @@ function assetLabel(assetType, asset) {
 
 export default function AssetIssueFormPage() {
   const navigate = useNavigate();
-  const { user, role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { user, role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
 
   const [form, setForm] = useState({
-    siteId: isAdmin ? '' : String(user?.siteId ?? ''),
+    siteId: picksSite ? '' : String(user?.siteId ?? ''),
     assetType: 'VEHICLE',
     assetId: '',
     assetMeterReading: '',
@@ -174,7 +175,7 @@ export default function AssetIssueFormPage() {
           <Alert tone="error">{submitError}</Alert>
 
           <div className="grid gap-x-4 sm:grid-cols-2">
-            <Field label="Site" required hint={!isAdmin ? 'Assets at your own site.' : undefined}>
+            <Field label="Site" required hint={!picksSite ? 'Assets at your own site.' : undefined}>
               {({ id: fieldId, invalid, describedBy }) => (
                 <Select
                   id={fieldId}
@@ -182,10 +183,10 @@ export default function AssetIssueFormPage() {
                   describedBy={describedBy}
                   value={form.siteId}
                   onChange={updateForm('siteId')}
-                  disabled={!isAdmin}
+                  disabled={!picksSite}
                   required
                 >
-                  {isAdmin && <option value="">Select a site</option>}
+                  {picksSite && <option value="">Select a site</option>}
                   {Object.entries(siteNames).map(([siteId, name]) => (
                     <option key={siteId} value={siteId} data-added={siteId}>
                       {name}

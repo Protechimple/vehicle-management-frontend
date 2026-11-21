@@ -37,8 +37,9 @@ function listParams(active) {
 export default function ExternalFuelPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
 
   const [filters, setFilters] = useState({
@@ -236,7 +237,7 @@ export default function ExternalFuelPage() {
       <Alert tone="success">{notice}</Alert>
       <Alert tone="error">{error}</Alert>
 
-      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${isAdmin ? 'lg:grid-cols-7' : 'lg:grid-cols-6'}`}>
+      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${picksSite ? 'lg:grid-cols-7' : 'lg:grid-cols-6'}`}>
         <Input
           placeholder="Search vehicle no, party, driver..."
           title="Search by vehicle number, party name, driver, entry number or slip number"
@@ -259,7 +260,7 @@ export default function ExternalFuelPage() {
             </option>
           ))}
         </Select>
-        {isAdmin && (
+        {picksSite && (
           <Select value={filters.siteId} onChange={(e) => updateFilter('siteId', e.target.value)}>
             <option value="">All sites</option>
             {Object.entries(siteNames).map(([siteId, name]) => (

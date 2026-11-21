@@ -182,8 +182,9 @@ function EditFittingModal({ row, onClose, onDone }) {
 export default function TyreFittingPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
   const [filters, setFilters] = useState({ search: '', assetType: '', siteId: '', page: 1, sort: 'fittedAt:desc' });
   const [result, setResult] = useState(null);
@@ -307,14 +308,14 @@ export default function TyreFittingPage() {
       <Alert tone="success">{notice}</Alert>
       <Alert tone="error">{error}</Alert>
 
-      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${isAdmin ? 'lg:grid-cols-3' : ''}`}>
+      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${picksSite ? 'lg:grid-cols-3' : ''}`}>
         <Input placeholder="Search asset, tyre or position..." value={filters.search} onChange={(e) => updateFilter('search', e.target.value)} />
         <Select aria-label="Asset type" value={filters.assetType} onChange={(e) => updateFilter('assetType', e.target.value)}>
           <option value="">Vehicles &amp; machinery</option>
           <option value="VEHICLE">Vehicles</option>
           <option value="MACHINERY">Machinery</option>
         </Select>
-        {isAdmin && (
+        {picksSite && (
           <Select aria-label="Site" value={filters.siteId} onChange={(e) => updateFilter('siteId', e.target.value)}>
             <option value="">All sites</option>
             {Object.entries(siteNames).map(([siteId, name]) => (

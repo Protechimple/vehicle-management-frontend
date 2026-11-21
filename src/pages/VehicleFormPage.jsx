@@ -9,7 +9,6 @@ import { VEHICLE_TYPE_OPTIONS, HOURS_BASED_VEHICLE_TYPE } from '../config/vehicl
 import { FUEL_TYPE_OPTIONS } from '../config/fuelTypes';
 import { complianceSlotsToFormValue } from '../config/compliance';
 import { useAuth } from '../context/AuthContext';
-import { hasPermission } from '../config/permissions';
 
 const EMPTY_FORM = {
   registrationNumber: '',
@@ -45,9 +44,10 @@ export default function VehicleFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
-  const { user, role } = useAuth();
+  const { user, isAdmin, canPickSite } = useAuth();
 
-  const canChooseSite = hasPermission(role, 'SITE', 'ASSIGN');
+  // The Admin places an asset at any site; a Site Manager with several sites picks one of theirs.
+  const canChooseSite = canPickSite;
   const lockedSiteId = user?.siteId ?? '';
 
   const [form, setForm] = useState(EMPTY_FORM);
@@ -291,7 +291,7 @@ export default function VehicleFormPage() {
                   onChange={update('currentSiteId')}
                   disabled={!canChooseSite}
                 >
-                  <option value="">Unassigned</option>
+                  <option value="">{isAdmin ? 'Unassigned' : 'Select one of your sites'}</option>
                   {archivedSite && (
                     <option value={archivedSite.id} data-added={archivedSite.id}>
                       {archivedSite.name} (archived)

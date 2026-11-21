@@ -25,8 +25,9 @@ function wholeNumber(value, max) {
 
 export default function AddBatteriesPage() {
   const navigate = useNavigate();
-  const { role, user } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, user, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
   const [sites, setSites] = useState([]);
   const [form, setForm] = useState({ siteId: '', purchaseDate: todayDateOnly(), supplierName: '', invoiceNumber: '' });
@@ -37,8 +38,8 @@ export default function AddBatteriesPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (isAdmin) listAll(sitesApi.list).then((r) => setSites(r.data)).catch(() => setSites([]));
-  }, [isAdmin]);
+    if (picksSite) listAll(sitesApi.list).then((r) => setSites(r.data)).catch(() => setSites([]));
+  }, [picksSite]);
 
   const set = (field) => (event) => {
     setForm((f) => ({ ...f, [field]: event.target.value }));
@@ -57,7 +58,7 @@ export default function AddBatteriesPage() {
   async function submit(event) {
     event.preventDefault();
     const next = {
-      siteId: isAdmin ? (form.siteId ? null : 'Choose the site.') : user?.siteId ? null : 'No site is assigned to your account. Ask your Admin to assign one.',
+      siteId: picksSite ? (form.siteId ? null : 'Choose the site.') : user?.siteId ? null : 'No site is assigned to your account. Ask your Admin to assign one.',
       purchaseDate: !form.purchaseDate ? 'Choose the date.' : form.purchaseDate > todayDateOnly() ? "Date can't be in the future." : null,
     };
     const nextRows = {};
@@ -83,7 +84,7 @@ export default function AddBatteriesPage() {
     setError(null);
     try {
       const response = await batteriesApi.purchase({
-        siteId: isAdmin ? Number(form.siteId) : undefined,
+        siteId: picksSite ? Number(form.siteId) : undefined,
         purchaseDate: form.purchaseDate,
         supplierName: form.supplierName.trim() || null,
         invoiceNumber: form.invoiceNumber.trim() || null,
@@ -122,7 +123,7 @@ export default function AddBatteriesPage() {
 
         <Card>
           <div className="grid gap-x-4 sm:grid-cols-2">
-            {isAdmin ? (
+            {picksSite ? (
               <Field label="Site" required error={errors.siteId}>
                 {({ id, invalid, describedBy }) => (
                   <Select id={id} invalid={invalid} describedBy={describedBy} value={form.siteId} onChange={set('siteId')}>

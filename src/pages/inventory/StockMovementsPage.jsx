@@ -5,7 +5,6 @@ import { Alert, Badge, Button, Input, Pagination, Select, Spinner, Table } from 
 import Can from '../../components/Can';
 import PrintReportButton from '../../components/PrintReport';
 import { useAuth } from '../../context/AuthContext';
-import { hasPermission } from '../../config/permissions';
 import useSiteNames from '../../hooks/useSiteNames';
 import { assetDescription, assetNumber } from '../../config/assetDetails';
 
@@ -122,8 +121,8 @@ export default function StockMovementsPage() {
   const [rows, setRows] = useState(null);
   const [error, setError] = useState(null);
   const siteNames = useSiteNames();
-  const { role } = useAuth();
-  const canSeeTransfers = hasPermission(role, 'STOCK_TRANSFER', 'READ');
+  const { can } = useAuth();
+  const canSeeTransfers = can('STOCK_TRANSFER', 'READ');
   const typeOptions = canSeeTransfers ? TYPE_OPTIONS : TYPE_OPTIONS.filter((o) => o.value !== 'TRANSFER');
 
   const load = useCallback(async (activeFilters) => {

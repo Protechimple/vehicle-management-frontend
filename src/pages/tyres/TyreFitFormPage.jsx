@@ -10,8 +10,9 @@ import { assetOptionLabel, machineryLabel } from '../../config/fuel';
 
 export default function TyreFitFormPage() {
   const navigate = useNavigate();
-  const { role, user } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, user, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
   const [sites, setSites] = useState([]);
   const [siteId, setSiteId] = useState('');
@@ -28,10 +29,10 @@ export default function TyreFitFormPage() {
   useEffect(() => {
     listAll(vehiclesApi.list, { sort: 'registrationNumber:asc' }).then((r) => setAssets((a) => ({ ...a, VEHICLE: r.data }))).catch(() => {});
     listAll(machineryApi.list, { sort: 'rcpl:asc' }).then((r) => setAssets((a) => ({ ...a, MACHINERY: r.data }))).catch(() => {});
-    if (isAdmin) listAll(sitesApi.list).then((r) => setSites(r.data)).catch(() => setSites([]));
-  }, [isAdmin]);
+    if (picksSite) listAll(sitesApi.list).then((r) => setSites(r.data)).catch(() => setSites([]));
+  }, [picksSite]);
 
-  const effectiveSiteId = isAdmin ? siteId : user?.siteId ? String(user.siteId) : '';
+  const effectiveSiteId = picksSite ? siteId : user?.siteId ? String(user.siteId) : '';
   const siteAssets = effectiveSiteId ? assets[assetType].filter((a) => String(a.currentSiteId) === effectiveSiteId) : [];
   const asset = siteAssets.find((a) => a.assetId === assetId) ?? null;
   const assetNoun = assetType === 'VEHICLE' ? 'vehicle' : 'machine';
@@ -77,7 +78,7 @@ export default function TyreFitFormPage() {
     const count = Number(form.count);
     const readingValue = Number(form.meterReading);
     const next = {
-      siteId: effectiveSiteId ? null : isAdmin ? 'Choose a site.' : 'No site is assigned to your account. Ask your Admin to assign one.',
+      siteId: effectiveSiteId ? null : picksSite ? 'Choose a site.' : 'No site is assigned to your account. Ask your Admin to assign one.',
       asset: !effectiveSiteId ? null : asset ? null : `Choose a ${assetNoun}.`,
       tyreTypeId: form.tyreTypeId ? null : 'Choose a tyre type.',
       count: !Number.isInteger(count) || count < 1 ? 'Enter how many tyres, 1 or more.' : count > available ? `Only ${available} available at this site.` : null,
@@ -141,7 +142,7 @@ export default function TyreFitFormPage() {
 
         <Card>
           <div className="grid gap-x-4 sm:grid-cols-3">
-            {isAdmin ? (
+            {picksSite ? (
               <Field label="Site" required error={errors.siteId}>
                 {({ id, invalid, describedBy }) => (
                   <Select

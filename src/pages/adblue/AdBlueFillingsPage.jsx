@@ -35,8 +35,9 @@ function appliedFilters(active, siteNames) {
 export default function AdBlueFillingsPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
 
   const [filters, setFilters] = useState({ search: '', assetType: '', siteId: '', dateFrom: '', dateTo: '', status: '', page: 1, sort: 'fillingDate:desc' });
@@ -199,7 +200,7 @@ export default function AdBlueFillingsPage() {
       <Alert tone="success">{notice}</Alert>
       <Alert tone="error">{error}</Alert>
 
-      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${isAdmin ? 'lg:grid-cols-6' : 'lg:grid-cols-5'}`}>
+      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${picksSite ? 'lg:grid-cols-6' : 'lg:grid-cols-5'}`}>
         <Input
           placeholder="Search asset ID, RCPL or registration no..."
           title="Search by asset ID, machinery RCPL or vehicle registration number"
@@ -211,7 +212,7 @@ export default function AdBlueFillingsPage() {
           <option value="VEHICLE">Vehicles</option>
           <option value="MACHINERY">Machinery</option>
         </Select>
-        {isAdmin && (
+        {picksSite && (
           <Select value={filters.siteId} onChange={(e) => updateFilter('siteId', e.target.value)}>
             <option value="">All sites</option>
             {Object.entries(siteNames).map(([siteId, name]) => (

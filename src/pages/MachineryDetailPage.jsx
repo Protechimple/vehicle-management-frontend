@@ -177,7 +177,9 @@ export default function MachineryDetailPage() {
         </dl>
       </Card>
 
-      <AssetDocumentsCard assetType="MACHINERY" assetId={machine.assetId} />
+      <Can resource="DOCUMENT" action="READ">
+        <AssetDocumentsCard assetType="MACHINERY" assetId={machine.assetId} />
+      </Can>
 
       <AssetCostCard assetType="MACHINERY" asset={machine} />
 

@@ -41,8 +41,9 @@ export default function FuelIssuesPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
   const siteNames = useSiteNames();
 
   const assetFilter = searchParams.get('assetId') ? { assetType: searchParams.get('assetType') ?? '', assetId: searchParams.get('assetId') } : null;
@@ -274,7 +275,7 @@ export default function FuelIssuesPage() {
         </div>
       )}
 
-      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${isAdmin ? 'lg:grid-cols-7' : 'lg:grid-cols-6'}`}>
+      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${picksSite ? 'lg:grid-cols-7' : 'lg:grid-cols-6'}`}>
         <Input placeholder="Search asset ID, RCPL or registration no..." title="Search by asset ID, machinery RCPL or vehicle registration number"value={filters.search} onChange={(e) => updateFilter('search', e.target.value)} disabled={Boolean(assetFilter)} />
         <Select value={assetFilter ? assetFilter.assetType : filters.assetType} onChange={(e) => updateFilter('assetType', e.target.value)} disabled={Boolean(assetFilter)}>
           <option value="">All asset types</option>
@@ -286,7 +287,7 @@ export default function FuelIssuesPage() {
           <option value="SITE_STOCK">Site stock</option>
           <option value="DIRECT_PUMP">Direct at pump</option>
         </Select>
-        {isAdmin && (
+        {picksSite && (
           <Select value={filters.siteId} onChange={(e) => updateFilter('siteId', e.target.value)}>
             <option value="">All sites</option>
             {Object.entries(siteNames).map(([siteId, name]) => (

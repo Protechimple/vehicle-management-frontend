@@ -84,8 +84,9 @@ function AdjustmentLine({ line, index, items, siteId, onChange, onRemove, canRem
 
 export default function StockAdjustmentFormPage() {
   const navigate = useNavigate();
-  const { user, role } = useAuth();
-  const isAdmin = role === 'admin';
+  const { user, role, canPickSite } = useAuth();
+  // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
+  const picksSite = canPickSite;
 
   const [form, setForm] = useState({ siteId: '', adjustmentDate: todayDateOnly(), reason: '' });
   const [lines, setLines] = useState([{ ...EMPTY_LINE }]);
@@ -93,13 +94,13 @@ export default function StockAdjustmentFormPage() {
   const [sites, setSites] = useState([]);
   const [submitError, setSubmitError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const itemIdsInStock = useItemIdsInStock(isAdmin ? form.siteId : String(user?.siteId ?? ''));
+  const itemIdsInStock = useItemIdsInStock(picksSite ? form.siteId : String(user?.siteId ?? ''));
   const itemsInStock = useMemo(() => items.filter((it) => itemIdsInStock.has(it.id)), [items, itemIdsInStock]);
 
   useEffect(() => {
     listAll(itemsApi.list).then((r) => setItems(r.data)).catch(() => setItems([]));
-    if (isAdmin) listAll(sitesApi.list).then((r) => setSites(r.data)).catch(() => setSites([]));
-  }, [isAdmin]);
+    if (picksSite) listAll(sitesApi.list).then((r) => setSites(r.data)).catch(() => setSites([]));
+  }, [picksSite]);
 
   function updateForm(field) {
     return (event) => {
@@ -140,7 +141,7 @@ export default function StockAdjustmentFormPage() {
     setSubmitting(true);
 
     const payload = {
-      siteId: isAdmin ? Number(form.siteId) : undefined,
+      siteId: picksSite ? Number(form.siteId) : undefined,
       adjustmentDate: form.adjustmentDate,
       reason: form.reason || undefined,
       items: filledLines.map((line) => ({
@@ -171,7 +172,7 @@ export default function StockAdjustmentFormPage() {
           <Alert tone="error">{submitError}</Alert>
 
           <div className="grid gap-x-4 sm:grid-cols-2">
-            {isAdmin && (
+            {picksSite && (
               <Field label="Site" required>
                 {({ id: fieldId, invalid, describedBy }) => (
                   <Select id={fieldId} invalid={invalid} describedBy={describedBy} value={form.siteId} onChange={updateForm('siteId')} required>
@@ -202,12 +203,12 @@ export default function StockAdjustmentFormPage() {
           <div className="mt-4 border-t border-steel-200 pt-4">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-steel-900">Items</h2>
-              <Button type="button" variant="secondary" size="sm" onClick={addLine} disabled={isAdmin && !form.siteId}>
+              <Button type="button" variant="secondary" size="sm" onClick={addLine} disabled={picksSite && !form.siteId}>
                 Add item
               </Button>
             </div>
 
-            {isAdmin && !form.siteId ? (
+            {picksSite && !form.siteId ? (
               <p className="text-sm text-steel-400">Select a site above to choose which items to count.</p>
             ) : (
               <div className="flex flex-col gap-3">
@@ -217,7 +218,7 @@ export default function StockAdjustmentFormPage() {
                     line={line}
                     index={index}
                     items={itemsInStock}
-                    siteId={isAdmin ? form.siteId : ''}
+                    siteId={picksSite ? form.siteId : ''}
                     onChange={updateLine}
                     onRemove={removeLine}
                     canRemove={lines.length > 1}

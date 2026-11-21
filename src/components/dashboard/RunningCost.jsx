@@ -85,18 +85,19 @@ function LegendItem({ color, label, value }) {
   );
 }
 
-export function RunningCostCard({ trend, selected, onSelect, className = '' }) {
+export function RunningCostCard({ trend, selected, onSelect, showFuel = true, showParts = true, className = '' }) {
   const month = trend.find((m) => m.month === selected) ?? trend[trend.length - 1];
+  const what = [showFuel && 'fuel', showParts && 'parts'].filter(Boolean).join(' + ');
 
   return (
     <DashboardCard title="Fleet running cost" aside="Last 6 months" className={`@container ${className}`}>
       <div className="grid flex-1 gap-x-4 gap-y-3 @sm:grid-cols-[minmax(0,8.5rem)_minmax(0,1fr)]">
         <div className="min-w-0">
-          <p className="text-xs text-steel-500">{monthName(month.month, 'shortYear')} · fuel + parts</p>
+          <p className="text-xs text-steel-500">{monthName(month.month, 'shortYear')} · {what}</p>
           <p className="truncate text-xl font-semibold tracking-tight text-steel-900 tabular-nums">{rupees.format(month.total)}</p>
           <dl className="mt-2 grid gap-1 text-xs">
-            <LegendItem color={FUEL_SELECTED_COLOR} label="Fuel" value={rupees.format(month.fuel)} />
-            <LegendItem color={PARTS_SELECTED_COLOR} label="Parts" value={rupees.format(month.parts)} />
+            {showFuel && <LegendItem color={FUEL_SELECTED_COLOR} label="Fuel" value={rupees.format(month.fuel)} />}
+            {showParts && <LegendItem color={PARTS_SELECTED_COLOR} label="Parts" value={rupees.format(month.parts)} />}
           </dl>
         </div>
         <div className="flex min-h-36 min-w-0">
@@ -117,14 +118,16 @@ function UsageFigure({ label, value, detail }) {
   );
 }
 
-export function UsageCard({ month, className = '' }) {
+export function UsageCard({ month, showFuel = true, showParts = true, className = '' }) {
   return (
     <DashboardCard title={`${monthName(month.month, 'month')} usage`} className={`@container ${className}`}>
       <dl className="flex flex-1 flex-col divide-y divide-steel-100 @lg:grid @lg:grid-cols-4 @lg:gap-x-4 @lg:divide-y-0">
-        <UsageFigure label="Fuel used" value={formatLitres(month.fuelLitres)} detail={`${month.fills} fills`} />
-        <UsageFigure label="Parts used" value={rupees.format(month.parts)} detail={`${month.issues} issues`} />
-        <UsageFigure label="Purchases" value={rupees.format(month.purchases)} detail="received" />
-        <UsageFigure label="Fuel bought" value={rupees.format(month.fuelBought)} detail={formatLitres(month.fuelBoughtLitres)} />
+        {showFuel && <UsageFigure label="Fuel used" value={formatLitres(month.fuelLitres)} detail={`${month.fills} fills`} />}
+        {showParts && <UsageFigure label="Parts used" value={rupees.format(month.parts)} detail={`${month.issues} issues`} />}
+        {showParts && <UsageFigure label="Purchases" value={rupees.format(month.purchases)} detail="received" />}
+        {showFuel && (
+          <UsageFigure label="Fuel bought" value={rupees.format(month.fuelBought)} detail={formatLitres(month.fuelBoughtLitres)} />
+        )}
       </dl>
     </DashboardCard>
   );
