@@ -53,15 +53,17 @@ function MemberForm({ mode, initial, sites, members, onCancel, onSaved }) {
   const [form, setForm] = useState({
     name: initial?.name ?? '',
     email: initial?.email ?? '',
-    role: initial?.role ?? 'supervisor',
+    role: initial?.role ?? '',
     siteIds: (initial?.siteIds ?? []).map(String),
     managerId: initial?.managerId ? String(initial.managerId) : '',
   });
   const [error, setError] = useState(null);
+  const [roleError, setRoleError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   const update = (field) => (event) => setForm((f) => ({ ...f, [field]: event.target.value }));
-  const multi = isMultiSite(form.role);
+  // Every role can have several sites, so the site checklist shows even before a role is chosen.
+  const multi = !form.role || isMultiSite(form.role);
   // A Site Manager always reports to the Admin; only Supervisors and Inventory Supervisors are placed under one.
   const hasManager = form.role !== 'site_manager';
 
@@ -82,12 +84,17 @@ function MemberForm({ mode, initial, sites, members, onCancel, onSaved }) {
 
   function changeRole(event) {
     const role = event.target.value;
+    setRoleError(null);
     setForm((f) => ({ ...f, role, siteIds: isMultiSite(role) ? f.siteIds : f.siteIds.slice(0, 1), managerId: role === 'site_manager' ? '' : f.managerId }));
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError(null);
+    if (!form.role) {
+      setRoleError('Select a role');
+      return;
+    }
     setSubmitting(true);
 
     const payload = {
@@ -115,9 +122,14 @@ function MemberForm({ mode, initial, sites, members, onCancel, onSaved }) {
     <form onSubmit={handleSubmit} noValidate>
       <Alert tone="error">{error}</Alert>
 
-      <Field label="Role" required hint={ROLE_SUMMARIES[form.role]}>
+      <Field label="Role" required hint={ROLE_SUMMARIES[form.role] ?? 'Choose what this person does.'} error={roleError}>
         {({ id, invalid, describedBy }) => (
           <Select id={id} invalid={invalid} describedBy={describedBy} name="role" value={form.role} onChange={changeRole} required>
+            {!form.role && (
+              <option value="" disabled>
+                Select a role…
+              </option>
+            )}
             {MEMBER_ROLES.map((role) => (
               <option key={role} value={role}>
                 {roleLabel(role)}
@@ -218,7 +230,11 @@ function MemberForm({ mode, initial, sites, members, onCancel, onSaved }) {
         </Field>
       ) : (
         <Field label="Reports to" hint="A Site Manager always reports to the Admin.">
-          {({ id }) => <Input id={id} value="Admin" disabled />}
+          {({ id }) => (
+            <div id={id} className="cursor-default rounded border border-steel-200 bg-steel-50 px-3 py-1.5 text-sm text-steel-700 select-none">
+              Admin
+            </div>
+          )}
         </Field>
       )}
 
@@ -231,7 +247,7 @@ function MemberForm({ mode, initial, sites, members, onCancel, onSaved }) {
           Cancel
         </Button>
         <Button type="submit" loading={submitting} disabled={sites.length === 0}>
-          {mode === 'create' ? `Create ${roleLabel(form.role)}` : 'Save changes'}
+          {mode === 'create' ? (form.role ? `Create ${roleLabel(form.role)}` : 'Create user') : 'Save changes'}
         </Button>
       </div>
     </form>
