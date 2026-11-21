@@ -1,6 +1,11 @@
 import { useTheme } from '../context/ThemeContext';
 
-export default function ThemeToggle({ className = '' }) {
+const TONES = {
+  header: 'text-steel-500 hover:bg-steel-100 hover:text-steel-900',
+  nav: 'text-nav-300 hover:bg-white/10 hover:text-white',
+};
+
+export default function ThemeToggle({ tone = 'header', className = '' }) {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
   const label = isDark ? 'Switch to light mode' : 'Switch to dark mode';
@@ -12,7 +17,7 @@ export default function ThemeToggle({ className = '' }) {
       aria-label={label}
       title={label}
       aria-pressed={isDark}
-      className={`rounded p-1.5 text-steel-500 transition-colors hover:bg-steel-100 hover:text-steel-900 ${className}`}
+      className={`rounded p-1.5 transition-colors ${TONES[tone]} ${className}`}
     >
       {isDark ? (
         <svg viewBox="0 0 20 20" aria-hidden="true" className="size-4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">

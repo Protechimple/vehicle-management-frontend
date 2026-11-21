@@ -31,7 +31,7 @@ export const PERMISSIONS = Object.freeze({
   MACHINERY: standardModule,
   MAINTENANCE: { ...standardModule, UPDATE_COST: ADMIN_ONLY },
   SERVICE: standardModule,
-  TYRE: standardModule,
+  TYRE: { ...standardModule, TRANSFER: ADMIN_ONLY },
   BATTERY: { ...standardModule, SCRAP: BOTH, EDIT_DETAILS: ADMIN_ONLY },
   FUEL: standardModule,
   ADBLUE: standardModule,
