@@ -51,7 +51,7 @@ export function SiteBreakdownCard({ data, onSelectSite }) {
 
   return (
     <DashboardCard title="Your sites" aside={`Costs for ${monthName(data.month, 'long')}`} flush>
-      <div className="overflow-x-auto">
+      <div className="scroll-shadow-x relative overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-steel-200 text-xs font-semibold tracking-wide text-steel-500 uppercase">
@@ -66,7 +66,8 @@ export function SiteBreakdownCard({ data, onSelectSite }) {
           <tbody className="divide-y divide-steel-100">
             {data.sites.map((site) => (
               <tr key={site.siteId} className="hover:bg-steel-50">
-                <td className="px-4 py-2">
+                {/* min-w: on phones the number columns would otherwise squeeze long site names to one word a line. */}
+                <td className="min-w-44 px-4 py-2">
                   <button
                     type="button"
                     className="text-left font-medium text-brand-700 hover:underline"

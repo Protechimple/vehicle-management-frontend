@@ -46,8 +46,13 @@
 
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
+/* iPhone and iPad (every iOS browser is WebKit). */
+@custom-variant ios (@supports (-webkit-touch-callout: none));
+
 :root {
   color-scheme: light;
+
+  --scroll-shadow: rgb(22 32 42 / 0.16);
 
   --color-chart-fuel: #1d4e78;
   --color-chart-parts: #8fb3d3;
@@ -93,6 +98,8 @@
   --color-danger-solid: #b93b25;
   --color-danger-solid-hover: #cc4a32;
 
+  --scroll-shadow: rgb(0 0 0 / 0.5);
+
   --color-chart-fuel: #6aa6dc;
   --color-chart-parts: #36597a;
   --color-chart-fuel-selected: #a9cff1;
@@ -121,6 +128,47 @@
     -webkit-appearance: none;
     margin: 0;
   }
+
+  /* Date and time fields on iPhone/iPad: drop Safari's native control styling so they look and size like every other
+     field and can shrink with their column; the value keeps a usable minimum width and no stray margin. (Preflight
+     already keeps them full height when empty and left-aligns the value.) */
+  @variant ios {
+    input:is([type='date'], [type='time'], [type='datetime-local'], [type='month']) {
+      appearance: none;
+      min-width: 0;
+    }
+
+    input::-webkit-date-and-time-value {
+      min-width: 5.5rem;
+      margin: 0;
+    }
+  }
+}
+
+/* iOS Safari zooms the page into any focused field whose text is smaller than 16px, and stays zoomed afterwards.
+   On iPhone and iPad every field you type into or pick from is at least 16px, at any width and orientation; the
+   Select trigger matches so fields in a row stay the same height. Other browsers don't zoom, so they keep the
+   normal sizes. Unlayered, so it wins over text-sm/text-xs on these elements without !important. Pinch-zoom is
+   untouched. */
+@variant ios {
+  input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='button'], [type='submit'], [type='reset'], [type='image']),
+  select,
+  textarea,
+  button[aria-haspopup='listbox'] {
+    font-size: max(1rem, 16px);
+    line-height: 1.5;
+  }
+}
+
+/* A table wider than its box scrolls inside it. A soft shadow on the edge that has more columns hidden behind it
+   tells you to swipe; once you reach that end the shadow is covered. Nothing shows when the table fits. */
+@utility scroll-shadow-x {
+  background:
+    linear-gradient(to right, var(--color-surface) 30%, transparent) left center / 2.5rem 100% no-repeat local,
+    linear-gradient(to left, var(--color-surface) 30%, transparent) right center / 2.5rem 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, var(--scroll-shadow), transparent) left center / 0.875rem 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, var(--scroll-shadow), transparent) right center / 0.875rem 100% no-repeat scroll,
+    var(--color-surface);
 }
 
 /* Print / Download: while a report is printing (class set by PrintReport), print only the report, on white.

@@ -16,7 +16,9 @@ export default function AppLayout() {
           <div
             role="presentation"
             onClick={() => setSidebarOpen(false)}
-            className="fixed inset-0 z-30 bg-brand-900/50 lg:hidden"
+            // Above the sticky header (z-30) and below the drawer (z-40), so the header is dimmed and can't be tapped
+            // through while the menu is open.
+            className="fixed inset-0 z-35 bg-brand-900/50 lg:hidden"
           />
         )}
 

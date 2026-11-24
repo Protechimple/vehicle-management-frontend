@@ -7,7 +7,8 @@ const VARIANTS = {
 };
 
 const SIZES = {
-  sm: 'px-2.5 py-1.5 text-xs',
+  // At least 36px tall on touch screens, so small buttons are easy to tap.
+  sm: 'px-2.5 py-1.5 text-xs pointer-coarse:min-h-9',
   md: 'px-4 py-2 text-sm',
   lg: 'px-5 py-2.5 text-base',
 };

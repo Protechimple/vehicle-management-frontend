@@ -329,11 +329,14 @@ function SiteChips({ siteIds, siteNames }) {
 
 // Less frequent actions, kept out of the row so the table fits. The menu opens to the left of the ⋯ button, so the
 // ⋯ buttons of the other rows stay clickable: clicking another user's ⋯ closes this menu and opens theirs. It also
-// closes on an outside click or Esc, and lines up with the button's bottom when there is no room below.
+// closes on an outside click or Esc, and lines up with the button's bottom when there is no room below. The menu is
+// placed on the screen (position: fixed) rather than inside the table, so the table's sideways-scroll box never cuts
+// it off; on a screen too narrow to fit it beside the button, it opens below (or above) the button instead.
 function MoreActions({ member, onPassword, onStatus }) {
   const [open, setOpen] = useState(false);
-  const [upwards, setUpwards] = useState(false);
+  const [place, setPlace] = useState(null);
   const ref = useRef(null);
+  const buttonRef = useRef(null);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -343,18 +346,41 @@ function MoreActions({ member, onPassword, onStatus }) {
     const onKey = (event) => {
       if (event.key === 'Escape') setOpen(false);
     };
+    // Its position is worked out when it opens, so it closes rather than drift when the page or table moves.
+    const onMove = () => setOpen(false);
+    // touchstart too: iOS Safari sends no mousedown when you tap a plain part of the page, so the menu stayed open.
     document.addEventListener('mousedown', onPointer);
+    document.addEventListener('touchstart', onPointer);
     document.addEventListener('keydown', onKey);
+    window.addEventListener('scroll', onMove, true);
+    window.addEventListener('resize', onMove);
     return () => {
       document.removeEventListener('mousedown', onPointer);
+      document.removeEventListener('touchstart', onPointer);
       document.removeEventListener('keydown', onKey);
+      window.removeEventListener('scroll', onMove, true);
+      window.removeEventListener('resize', onMove);
     };
   }, [open]);
 
   function toggle() {
     if (!open) {
-      const bottom = ref.current?.getBoundingClientRect().bottom ?? 0;
-      setUpwards(bottom + 110 > window.innerHeight);
+      const rect = buttonRef.current.getBoundingClientRect();
+      const viewWidth = document.documentElement.clientWidth;
+      const upwards = rect.bottom + 110 > window.innerHeight;
+      // w-44 menu (176px) + 6px gap + 8px from the screen edge.
+      const fitsLeft = rect.left >= 176 + 6 + 8;
+      setPlace(
+        fitsLeft
+          ? {
+              right: viewWidth - rect.left + 6,
+              ...(upwards ? { bottom: window.innerHeight - rect.bottom } : { top: rect.top }),
+            }
+          : {
+              right: Math.max(8, viewWidth - rect.right),
+              ...(upwards ? { bottom: window.innerHeight - rect.top + 4 } : { top: rect.bottom + 4 }),
+            },
+      );
     }
     setOpen((value) => !value);
   }
@@ -368,23 +394,23 @@ function MoreActions({ member, onPassword, onStatus }) {
   return (
     <div ref={ref} className="relative">
       <button
+        ref={buttonRef}
         type="button"
         aria-label={`More actions for ${member.name}`}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={toggle}
-        className={`flex h-7.5 items-center rounded border px-2 text-steel-600 transition-colors hover:bg-steel-50 ${
+        className={`flex h-7.5 items-center rounded border px-2 text-steel-600 transition-colors hover:bg-steel-50 pointer-coarse:h-9 ${
           open ? 'border-brand-500 bg-steel-50' : 'border-steel-200 bg-surface'
         }`}
       >
         <span aria-hidden="true">⋯</span>
       </button>
-      {open && (
+      {open && place && (
         <div
           role="menu"
-          className={`absolute right-full z-30 mr-1.5 w-44 overflow-hidden rounded border border-steel-200 bg-surface py-1 shadow-lg ring-1 ring-black/5 ${
-            upwards ? 'bottom-0' : 'top-0'
-          }`}
+          style={{ position: 'fixed', ...place }}
+          className="z-30 w-44 overflow-hidden rounded border border-steel-200 bg-surface py-1 shadow-lg ring-1 ring-black/5"
         >
           <button type="button" role="menuitem" className={`${item} text-steel-700`} onClick={() => choose(onPassword)}>
             Set new password
@@ -543,7 +569,9 @@ export default function UsersPage() {
           </Select>
         </div>
 
-        <div className="-mx-5 overflow-x-auto lg:overflow-visible">
+        {/* Scrolls sideways inside the card when wider than it. `relative` keeps the absolutely positioned "Actions"
+            label inside the scroll box; without it the page itself scrolled sideways on phones and tablets. */}
+        <div className="scroll-shadow-x relative -mx-5 overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-steel-200 text-xs font-semibold tracking-wide text-steel-500 uppercase">

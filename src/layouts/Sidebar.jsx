@@ -6,7 +6,8 @@ import ThemeToggle from '../components/ThemeToggle';
 
 const linkClasses = ({ isActive }) =>
   [
-    'block rounded px-3 py-1.5 text-sm transition-colors',
+    // Taller rows in the phone/tablet drawer so links are easy to tap; the desktop sidebar keeps its size.
+    'block rounded px-3 py-2.5 text-sm transition-colors lg:py-1.5',
     isActive
       ? 'bg-accent font-semibold text-white'
       : 'text-nav-300 hover:bg-white/10 hover:text-white',
@@ -28,7 +29,7 @@ function NavSection({ title, paths, children }) {
         onClick={() => setOpen((current) => !current)}
         aria-expanded={open}
         className={[
-          'flex w-full items-center justify-between rounded px-3 py-2 text-sm font-semibold transition-colors',
+          'flex w-full items-center justify-between rounded px-3 py-2.5 text-sm font-semibold transition-colors lg:py-2',
           isInSection ? 'text-white' : 'text-nav-200 hover:bg-white/10 hover:text-white',
         ].join(' ')}
       >
@@ -185,7 +186,7 @@ export default function Sidebar({ open, onNavigate }) {
           to="/dashboard"
           className={({ isActive }) =>
             [
-              'block rounded px-3 py-2 text-sm font-semibold transition-colors',
+              'block rounded px-3 py-2.5 text-sm font-semibold transition-colors lg:py-2',
               isActive ? 'bg-accent text-white' : 'text-nav-200 hover:bg-white/10 hover:text-white',
             ].join(' ')
           }

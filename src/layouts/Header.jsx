@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { RoleBadge, Button } from '../components/ui';
 import BrandingButton from '../components/BrandingButton';
@@ -14,8 +15,25 @@ export default function Header({ onToggleSidebar }) {
   const organizationName = organization?.organizationName;
   const title = branding?.dashboardTitle;
 
+  // Sticky bars inside pages sit just below this header (top: var(--app-header-height)). On phones its height
+  // depends on how many lines the organization name and title take, so it is measured rather than assumed.
+  const headerRef = useRef(null);
+  useLayoutEffect(() => {
+    const header = headerRef.current;
+    if (!header) return undefined;
+    const root = document.documentElement;
+    const publish = () => root.style.setProperty('--app-header-height', `${header.offsetHeight}px`);
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(header);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty('--app-header-height');
+    };
+  }, []);
+
   return (
-    <header className="sticky top-0 z-30 flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-steel-200 bg-surface px-4 py-2 sm:h-16 sm:gap-4 sm:px-6 sm:py-0 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,auto)_minmax(0,1fr)]">
+    <header ref={headerRef} className="sticky top-0 z-30 flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-steel-200 bg-surface px-4 py-2 sm:h-16 sm:gap-4 sm:px-6 sm:py-0 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,auto)_minmax(0,1fr)]">
       <div className="flex min-w-0 items-center gap-2.5 sm:gap-3.5">
         <button
           type="button"

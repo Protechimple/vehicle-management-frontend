@@ -237,7 +237,7 @@ export default function ExternalFuelPage() {
       <Alert tone="success">{notice}</Alert>
       <Alert tone="error">{error}</Alert>
 
-      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${picksSite ? 'lg:grid-cols-7' : 'lg:grid-cols-6'}`}>
+      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${picksSite ? 'lg:grid-cols-4 xl:grid-cols-7' : 'lg:grid-cols-4 xl:grid-cols-6'}`}>
         <Input
           placeholder="Search vehicle no, party, driver..."
           title="Search by vehicle number, party name, driver, entry number or slip number"

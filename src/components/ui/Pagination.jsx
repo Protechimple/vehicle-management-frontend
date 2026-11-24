@@ -39,7 +39,7 @@ export default function Pagination({ page, pages, total, onPageChange, showPageN
                 aria-current={item === page ? 'page' : undefined}
                 onClick={() => onPageChange(item)}
                 className={[
-                  'min-w-8 rounded border px-2 py-1 text-xs font-semibold tabular-nums',
+                  'min-w-8 rounded border px-2 py-1 text-xs font-semibold tabular-nums pointer-coarse:min-h-9 pointer-coarse:min-w-9',
                   item === page ? 'border-accent bg-accent text-white' : 'border-steel-200 bg-surface text-steel-700 hover:bg-steel-50',
                 ].join(' ')}
               >

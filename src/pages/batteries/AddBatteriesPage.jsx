@@ -154,7 +154,7 @@ export default function AddBatteriesPage() {
         </Card>
 
         <Card title={`Batteries (${rows.length})`} className="mt-4">
-          <div className="overflow-x-auto">
+          <div className="scroll-shadow-x relative overflow-x-auto">
             <table className="w-full min-w-[40rem] text-left text-sm">
               <thead>
                 <tr className="border-b border-steel-200">

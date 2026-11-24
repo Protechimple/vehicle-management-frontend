@@ -285,7 +285,9 @@ function Dropdown({
   const activeOption = open ? shown[active] : null;
 
   return (
-    <div className={`relative w-full ${className}`}>
+    // min-w-0 here and contain on the label: a long chosen label is cut short with "…" instead of stretching the
+    // grid or flex row it sits in past the edge of the screen.
+    <div className={`relative w-full min-w-0 ${className}`}>
       <button
         ref={triggerRef}
         id={id}
@@ -302,7 +304,7 @@ function Dropdown({
         onKeyDown={onTriggerKeyDown}
         className={`${fieldClasses(invalid)} flex items-center gap-2 text-left`}
       >
-        <span className="min-w-0 flex-1 truncate">{selected?.label ?? blanks[0]?.label ?? ''}</span>
+        <span className="min-w-0 flex-1 truncate [contain:inline-size]">{selected?.label ?? blanks[0]?.label ?? ''}</span>
         <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4 shrink-0 fill-steel-500">
           <path d="M5.3 7.3a1 1 0 0 1 1.4 0L10 10.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 0 1 0-1.4Z" />
         </svg>

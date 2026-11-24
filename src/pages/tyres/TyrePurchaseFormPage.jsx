@@ -127,7 +127,7 @@ export default function TyrePurchaseFormPage() {
         <Alert tone="error">{error}</Alert>
 
         <Card>
-          <div className="grid gap-x-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-x-4 sm:grid-cols-2 xl:grid-cols-4">
             {picksSite ? (
               <Field label="Site" required error={errors.siteId}>
                 {({ id, invalid, describedBy }) => (
@@ -167,7 +167,7 @@ export default function TyrePurchaseFormPage() {
             </Button>
           }
         >
-          <div className="overflow-x-auto">
+          <div className="scroll-shadow-x relative overflow-x-auto">
             <table className="w-full min-w-[46rem] text-left text-sm">
               <thead>
                 <tr className="border-b border-steel-200 text-xs font-semibold tracking-wide text-steel-500 uppercase">

@@ -6,7 +6,8 @@ export default function Field({ label, error, hint, required = false, children }
   const hintId = `${id}-hint`;
 
   return (
-    <div className="mb-3">
+    // min-w-0: a long value inside a field can't widen the form grid past the screen.
+    <div className="mb-3 min-w-0">
       <label htmlFor={id} className="mb-1 block text-sm font-semibold text-steel-700">
         {label}
         {required && <span className="ml-0.5 text-danger-600">*</span>}

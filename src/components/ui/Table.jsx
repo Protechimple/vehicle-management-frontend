@@ -1,6 +1,7 @@
 export default function Table({ columns, rows, getRowKey, sort, onSort, emptyMessage = 'No records found.' }) {
   return (
-    <div className="overflow-x-auto">
+    // `relative` keeps absolutely positioned content inside the scroll box, so it can't widen the whole page.
+    <div className="scroll-shadow-x relative overflow-x-auto">
       <table className="w-full text-left text-sm">
         <thead>
           <tr className="border-b border-steel-200 text-xs font-semibold tracking-wide text-steel-500 uppercase">
