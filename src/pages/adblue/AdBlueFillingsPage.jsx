@@ -200,7 +200,7 @@ export default function AdBlueFillingsPage() {
       <Alert tone="success">{notice}</Alert>
       <Alert tone="error">{error}</Alert>
 
-      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${picksSite ? 'lg:grid-cols-6' : 'lg:grid-cols-5'}`}>
+      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${picksSite ? 'lg:grid-cols-3 xl:grid-cols-6' : 'lg:grid-cols-5'}`}>
         <Input
           placeholder="Search asset ID, RCPL or registration no..."
           title="Search by asset ID, machinery RCPL or vehicle registration number"

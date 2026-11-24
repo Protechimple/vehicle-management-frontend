@@ -90,6 +90,8 @@ export default function AccessMatrix({ modules, effective, baseline, onChange, d
     <div className="flex flex-col gap-3">
       <p className="flex items-center gap-1.5 text-xs text-steel-500">
         <span className="size-1.5 rounded-full bg-warning-600" aria-hidden="true" /> differs from the default
+        {/* On narrow screens Delete, Restore and Other are off to the right of each table. */}
+        <span className="md:hidden">· swipe a table sideways for more actions</span>
       </p>
 
       {modules.map((module) => {
@@ -128,9 +130,10 @@ export default function AccessMatrix({ modules, effective, baseline, onChange, d
               </label>
             </header>
 
-            <div className="overflow-x-auto">
-              {/* Fixed column widths, so every module's columns line up under each other. */}
-              <table className="w-full min-w-[40rem] table-fixed text-sm">
+            <div className="relative overflow-x-auto">
+              {/* Fixed column widths, so every module's columns line up under each other. The minimum width leaves
+                  the Screen column at least ~7.5rem on phones (the action columns alone take 37.5rem with Other). */}
+              <table className={`w-full ${hasOther ? 'min-w-[45rem]' : 'min-w-[40rem]'} table-fixed text-sm`}>
                 <colgroup>
                   <col />
                   {COLUMNS.map((c) => (

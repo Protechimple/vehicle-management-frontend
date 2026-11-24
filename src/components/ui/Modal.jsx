@@ -28,7 +28,9 @@ export default function Modal({ open, onClose, title, description, children, foo
     <dialog
       ref={dialogRef}
       aria-labelledby="modal-title"
-      className={`fixed inset-0 m-auto max-h-[calc(100vh-2rem)] ${wide === 'xl' ? 'w-[min(64rem,calc(100vw-2rem))]' : wide ? 'w-[min(44rem,calc(100vw-2rem))]' : 'w-[min(28rem,calc(100vw-2rem))]'} flex-col overflow-hidden rounded border border-steel-200 bg-surface p-0 backdrop:bg-brand-900/50 open:flex`}
+      // dvh where supported: on iPhone 100vh is taller than the area Safari's toolbars leave visible, so a tall dialog
+      // could run under the toolbar and hide its footer buttons.
+      className={`fixed inset-0 m-auto max-h-[calc(100vh-2rem)] supports-[height:100dvh]:max-h-[calc(100dvh-2rem)] ${wide === 'xl' ? 'w-[min(64rem,calc(100vw-2rem))]' : wide ? 'w-[min(44rem,calc(100vw-2rem))]' : 'w-[min(28rem,calc(100vw-2rem))]'} flex-col overflow-hidden rounded border border-steel-200 bg-surface p-0 backdrop:bg-brand-900/50 open:flex`}
     >
       {/* Header and footer stay put; only the content between them scrolls. */}
       <div className="flex shrink-0 items-start justify-between gap-4 border-b border-steel-200 px-5 py-4">

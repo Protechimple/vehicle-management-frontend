@@ -58,7 +58,7 @@ function AxleEditor({ initial, onCancel, onSave, saving, error }) {
         <Button size="sm" variant="secondary" disabled={axles.length >= 8} onClick={() => setAxles((all) => [...all, 2])}>
           + Add axle
         </Button>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-steel-600">
             {axles.length} {axles.length === 1 ? 'axle' : 'axles'} · <span className="font-semibold">{total} tyres</span>
           </span>

@@ -113,7 +113,7 @@ export default function VehicleDetailPage() {
         </div>
 
         {vehicle.status === 'active' ? (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               as={Link}
               to={`/compliance?assetType=VEHICLE&assetId=${encodeURIComponent(vehicle.assetId)}`}

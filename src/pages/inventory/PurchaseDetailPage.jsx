@@ -111,7 +111,7 @@ export default function PurchaseDetailPage() {
         </div>
 
         {isDraft && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Can resource="PURCHASE" action="UPDATE">
               <Button as={Link} to={`/inventory/purchases/${purchase.id}/edit`} variant="secondary">
                 Edit

@@ -113,7 +113,7 @@ export default function MachineryDetailPage() {
         </div>
 
         {machine.status === 'active' ? (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               as={Link}
               to={`/compliance?assetType=MACHINERY&assetId=${encodeURIComponent(machine.assetId)}`}

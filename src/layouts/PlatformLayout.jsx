@@ -53,7 +53,7 @@ function Sidebar({ open, onNavigate }) {
             onClick={onNavigate}
             className={({ isActive }) =>
               [
-                'flex items-center gap-2.5 rounded px-3 py-2 text-sm font-semibold transition-colors',
+                'flex items-center gap-2.5 rounded px-3 py-2.5 text-sm font-semibold transition-colors lg:py-2',
                 isActive ? 'bg-accent text-white' : 'text-nav-200 hover:bg-white/10 hover:text-white',
               ].join(' ')
             }

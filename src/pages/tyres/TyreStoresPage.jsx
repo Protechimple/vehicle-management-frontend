@@ -20,7 +20,7 @@ const EMPTY = {
 
 function StoreTabs({ active, counts, onChange }) {
   return (
-    <div className="mb-3 flex gap-1 overflow-x-auto border-b border-steel-200" role="tablist">
+    <div className="relative mb-3 flex gap-1 overflow-x-auto border-b border-steel-200" role="tablist">
       {TYRE_STATUSES.map((tab) => (
         <button
           key={tab.value}

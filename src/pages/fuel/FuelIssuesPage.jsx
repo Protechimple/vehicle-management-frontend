@@ -275,7 +275,7 @@ export default function FuelIssuesPage() {
         </div>
       )}
 
-      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${picksSite ? 'lg:grid-cols-7' : 'lg:grid-cols-6'}`}>
+      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${picksSite ? 'lg:grid-cols-4 xl:grid-cols-7' : 'lg:grid-cols-4 xl:grid-cols-6'}`}>
         <Input placeholder="Search asset ID, RCPL or registration no..." title="Search by asset ID, machinery RCPL or vehicle registration number"value={filters.search} onChange={(e) => updateFilter('search', e.target.value)} disabled={Boolean(assetFilter)} />
         <Select value={assetFilter ? assetFilter.assetType : filters.assetType} onChange={(e) => updateFilter('assetType', e.target.value)} disabled={Boolean(assetFilter)}>
           <option value="">All asset types</option>

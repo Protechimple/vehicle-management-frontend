@@ -111,7 +111,7 @@ export default function AccessPage() {
       {notice && <Alert tone="success">{notice}</Alert>}
       <Alert tone="error">{error}</Alert>
 
-      <div className="sticky top-0 z-10 mb-3 flex flex-wrap items-center justify-between gap-2 rounded border border-steel-200 bg-surface px-4 py-2.5">
+      <div className="sticky top-(--app-header-height,4rem) z-10 mb-3 flex flex-wrap items-center justify-between gap-2 rounded border border-steel-200 bg-surface px-4 py-2.5">
         <span className="text-sm text-steel-600">
           {dirtyKeys.length
             ? `${dirtyKeys.length} unsaved change${dirtyKeys.length === 1 ? '' : 's'}`
@@ -119,7 +119,7 @@ export default function AccessPage() {
               ? `${changedFromDefault} setting${changedFromDefault === 1 ? '' : 's'} differ from the default`
               : 'Using the built-in defaults'}
         </span>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="ghost" size="sm" onClick={resetToDefaults} disabled={saving || changedFromDefault === 0}>
             Reset to defaults
           </Button>
