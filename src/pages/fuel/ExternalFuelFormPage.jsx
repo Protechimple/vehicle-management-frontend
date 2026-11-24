@@ -16,9 +16,10 @@ const MOBILE_PATTERN = /^\+?[0-9\s\-()]+$/;
 
 function Figure({ label, value, tone = 'text-steel-900' }) {
   return (
-    <span className="whitespace-nowrap">
+    // The label (it can hold a long site name) may wrap on narrow phones; the figure itself stays on one line.
+    <span className="wrap-break-word">
       <span className="text-steel-500">{label} </span>
-      <span className={`font-semibold tabular-nums ${tone}`}>{value}</span>
+      <span className={`font-semibold whitespace-nowrap tabular-nums ${tone}`}>{value}</span>
     </span>
   );
 }

@@ -110,53 +110,56 @@ export function DocTypeTable({ data, siteId, className = '' }) {
 
   return (
     <DashboardCard flush title="By document type" aside="Click a row to open documents" className={`@container ${className}`}>
-      <table className="w-full text-left text-[13px]">
-        <thead className="border-y border-steel-200 bg-steel-50 text-xs font-semibold tracking-wider text-steel-900 uppercase">
-          <tr>
-            <th scope="col" className={`${TH} pl-4`}>Document</th>
-            <th scope="col" className={TH}>Total</th>
-            <th scope="col" className={`${TH} hidden w-full @2xl:table-cell`}>Status split</th>
-            <th scope="col" className={`${TH} hidden @lg:table-cell`}>Valid</th>
-            <th scope="col" className={`${TH} hidden @lg:table-cell`}>Due</th>
-            <th scope="col" className={`${TH} hidden @lg:table-cell`}>Expired</th>
-            <th scope="col" className={`${TH} hidden @lg:table-cell`}>No expiry</th>
-            <th scope="col" className={`${TH} pr-4`}>Status</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-steel-100">
-          {data.byDocType.map((row) => {
-            const to = complianceLink({ docType: row.docType, expiry: row.expired + row.expiringSoon > 0 ? 'ATTENTION' : '', siteId });
-            return (
-              <tr
-                key={row.docType}
-                onClick={(e) => {
-                  if (!e.target.closest('a')) navigate(to);
-                }}
-                className="cursor-pointer transition-colors hover:bg-steel-50"
-              >
-                <td className="py-1 pr-3 pl-4 font-semibold whitespace-nowrap text-steel-900">
-                  <Link to={to} className="hover:text-brand-600">
-                    {DOC_TYPE_LABELS[row.docType] ?? row.docType}
-                  </Link>
-                </td>
-                <td className="px-3 py-1 text-steel-700 tabular-nums">{numberFormat.format(row.total)}</td>
-                <td className="hidden px-3 py-1 @2xl:table-cell">
-                  <div className="min-w-24">
-                    <StatusBar counts={row} statuses={statuses} />
-                  </div>
-                </td>
-                <CountCell value={row.valid} tone="text-success-600" className="hidden @lg:table-cell" />
-                <CountCell value={row.expiringSoon} tone="text-warning-600" className="hidden @lg:table-cell" />
-                <CountCell value={row.expired} tone="text-danger-600" className="hidden @lg:table-cell" />
-                <CountCell value={row.noExpiry} tone="text-steel-500" className="hidden @lg:table-cell" />
-                <td className="py-1 pr-4 pl-3 whitespace-nowrap">
-                  <IssueCounts counts={row} />
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      {/* Scrolls sideways inside the card if it still can't fit (folded phones, phones held sideways). */}
+      <div className="scroll-shadow-x relative overflow-x-auto">
+        <table className="w-full text-left text-[13px]">
+          <thead className="border-y border-steel-200 bg-steel-50 text-xs font-semibold tracking-wider text-steel-900 uppercase">
+            <tr>
+              <th scope="col" className={`${TH} pl-4`}>Document</th>
+              <th scope="col" className={TH}>Total</th>
+              <th scope="col" className={`${TH} hidden w-full @2xl:table-cell`}>Status split</th>
+              <th scope="col" className={`${TH} hidden @xl:table-cell`}>Valid</th>
+              <th scope="col" className={`${TH} hidden @xl:table-cell`}>Due</th>
+              <th scope="col" className={`${TH} hidden @xl:table-cell`}>Expired</th>
+              <th scope="col" className={`${TH} hidden @xl:table-cell`}>No expiry</th>
+              <th scope="col" className={`${TH} pr-4`}>Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-steel-100">
+            {data.byDocType.map((row) => {
+              const to = complianceLink({ docType: row.docType, expiry: row.expired + row.expiringSoon > 0 ? 'ATTENTION' : '', siteId });
+              return (
+                <tr
+                  key={row.docType}
+                  onClick={(e) => {
+                    if (!e.target.closest('a')) navigate(to);
+                  }}
+                  className="cursor-pointer transition-colors hover:bg-steel-50"
+                >
+                  <td className="py-1 pr-3 pl-4 font-semibold whitespace-nowrap text-steel-900">
+                    <Link to={to} className="hover:text-brand-600">
+                      {DOC_TYPE_LABELS[row.docType] ?? row.docType}
+                    </Link>
+                  </td>
+                  <td className="px-3 py-1 text-steel-700 tabular-nums">{numberFormat.format(row.total)}</td>
+                  <td className="hidden px-3 py-1 @2xl:table-cell">
+                    <div className="min-w-24">
+                      <StatusBar counts={row} statuses={statuses} />
+                    </div>
+                  </td>
+                  <CountCell value={row.valid} tone="text-success-600" className="hidden @xl:table-cell" />
+                  <CountCell value={row.expiringSoon} tone="text-warning-600" className="hidden @xl:table-cell" />
+                  <CountCell value={row.expired} tone="text-danger-600" className="hidden @xl:table-cell" />
+                  <CountCell value={row.noExpiry} tone="text-steel-500" className="hidden @xl:table-cell" />
+                  <td className="py-1 pr-4 pl-3 whitespace-nowrap">
+                    <IssueCounts counts={row} />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </DashboardCard>
   );
 }

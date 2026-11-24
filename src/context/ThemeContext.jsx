@@ -12,8 +12,12 @@ function readStoredTheme() {
   }
 }
 
+// The phone's status bar (home-screen app, or Chrome's address bar on Android) follows the header's colour.
+const THEME_COLOR = { light: '#ffffff', dark: '#19232d' };
+
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[theme]);
 }
 
 export function ThemeProvider({ children }) {

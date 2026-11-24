@@ -4,9 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VMMS — Vehicle &amp; Machinery Management</title>
+
+    <!-- Added to a phone's home screen, VMMS opens full screen like an app, with its own name and icon. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="VMMS" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <!-- Phone status bar colour; ThemeContext keeps it matched to the light/dark theme. -->
+    <meta name="theme-color" content="#ffffff" />
+
     <script>
       try {
-        if (localStorage.getItem('vmms.theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+        if (localStorage.getItem('vmms.theme') === 'dark') {
+          document.documentElement.dataset.theme = 'dark';
+          document.querySelector('meta[name="theme-color"]').content = '#19232d';
+        }
       } catch (e) {}
     </script>
   </head>
