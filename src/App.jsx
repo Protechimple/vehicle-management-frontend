@@ -48,6 +48,13 @@ import BatteriesPage from './pages/batteries/BatteriesPage';
 import AddBatteriesPage from './pages/batteries/AddBatteriesPage';
 import BatteryHistoryPage from './pages/batteries/BatteryHistoryPage';
 import BatteryDetailPage from './pages/batteries/BatteryDetailPage';
+import BatteryReportsPage from './pages/batteries/BatteryReportsPage';
+import CentringCatalogPage from './pages/centring/CentringCatalogPage';
+import CentringMovementsPage from './pages/centring/CentringMovementsPage';
+import CentringEntryFormPage from './pages/centring/CentringEntryFormPage';
+import CentringEntryDetailPage from './pages/centring/CentringEntryDetailPage';
+import CentringStockPage from './pages/centring/CentringStockPage';
+import CentringReportsPage from './pages/centring/CentringReportsPage';
 import FuelStockPage from './pages/fuel/FuelStockPage';
 import FuelCollectionsPage from './pages/fuel/FuelCollectionsPage';
 import FuelCollectionFormPage from './pages/fuel/FuelCollectionFormPage';
@@ -251,7 +258,23 @@ export default function App() {
         <Route path="/batteries" element={<ProtectedRoute anyOf={[['BATTERY', 'READ']]}><BatteriesPage /></ProtectedRoute>} />
         <Route path="/batteries/add" element={<ProtectedRoute anyOf={[['BATTERY', 'CREATE']]}><AddBatteriesPage /></ProtectedRoute>} />
         <Route path="/batteries/history" element={<ProtectedRoute anyOf={[['BATTERY', 'READ']]}><BatteryHistoryPage /></ProtectedRoute>} />
+        <Route path="/batteries/reports" element={<ProtectedRoute allOf={[['BATTERY', 'READ'], ['REPORTS', 'VIEW']]}><BatteryReportsPage /></ProtectedRoute>} />
         <Route path="/batteries/:id" element={<ProtectedRoute anyOf={[['BATTERY', 'READ']]}><BatteryDetailPage /></ProtectedRoute>} />
+
+        <Route path="/centring" element={<Navigate to="/centring/movements" replace />} />
+        <Route path="/centring/catalog" element={<ProtectedRoute anyOf={[['CENTRING', 'READ']]}><CentringCatalogPage /></ProtectedRoute>} />
+        <Route path="/centring/movements" element={<ProtectedRoute anyOf={[['CENTRING', 'READ']]}><CentringMovementsPage /></ProtectedRoute>} />
+        <Route path="/centring/movements/:id" element={<ProtectedRoute anyOf={[['CENTRING', 'READ']]}><CentringEntryDetailPage /></ProtectedRoute>} />
+        <Route
+          path="/centring/:type/new"
+          element={
+            <ProtectedRoute anyOf={[['CENTRING', 'PURCHASE'], ['CENTRING', 'ISSUE'], ['CENTRING', 'TRANSFER'], ['CENTRING', 'ADJUST']]}>
+              <CentringEntryFormPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/centring/stock" element={<ProtectedRoute anyOf={[['CENTRING', 'READ']]}><CentringStockPage /></ProtectedRoute>} />
+        <Route path="/centring/reports" element={<ProtectedRoute allOf={[['CENTRING', 'VIEW_COST']]}><CentringReportsPage /></ProtectedRoute>} />
 
         <Route path="/forbidden" element={<ForbiddenPage />} />
       </Route>

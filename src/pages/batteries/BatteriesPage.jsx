@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { batteriesApi } from '../../api/client';
+import { batteriesApi, listAll } from '../../api/client';
 import { Alert, Button, Input, Pagination, Select, Spinner, Table } from '../../components/ui';
 import Can from '../../components/Can';
+import PrintReportButton from '../../components/PrintReport';
 import { ACTIONS, BatteryForm, BatteryStatusBadge, actionsFor } from '../../components/batteries/BatteryForms';
 import { useAuth } from '../../context/AuthContext';
 import useSiteNames from '../../hooks/useSiteNames';
 import useLastValidPage from '../../hooks/useLastValidPage';
-import { BATTERY_STATUSES, batteryName, formatDateOnly } from '../../config/batteries';
+import { BATTERY_STATUSES, STATUS_BY_VALUE, batteryName, formatDateOnly } from '../../config/batteries';
 
 const EMPTY = {
   '': 'No batteries yet. Click "Add batteries" to record your first purchase.',
@@ -126,6 +127,56 @@ export default function BatteriesPage() {
     },
   ];
 
+  // Every battery matching the filters, not just this page of them.
+  async function buildPrintReport() {
+    const { data } = await listAll(batteriesApi.list, {
+      status: filters.status || undefined,
+      search: filters.search || undefined,
+      siteId: filters.siteId || undefined,
+    });
+    const count = (status) => data.filter((b) => b.status === status).length;
+    return {
+      title: 'Batteries',
+      filters: [
+        ...(filters.status ? [{ label: 'Status', value: STATUS_BY_VALUE[filters.status]?.label ?? filters.status }] : []),
+        ...(filters.search.trim() ? [{ label: 'Search', value: filters.search.trim() }] : []),
+        ...(filters.siteId ? [{ label: 'Site', value: siteNames[filters.siteId] ?? '—' }] : []),
+      ],
+      summary: [
+        { label: 'Batteries', value: String(data.length) },
+        ...BATTERY_STATUSES.map((s) => ({ label: s.label, value: String(count(s.value)) })),
+      ],
+      sections: [
+        {
+          title: 'Batteries',
+          rows: data,
+          getRowKey: (b) => b.id,
+          emptyMessage: 'No batteries match these filters.',
+          columns: [
+            { key: 'code', label: 'Battery no.', width: '13%', render: (b) => b.batteryCode },
+            { key: 'serial', label: 'Serial no.', width: '15%', render: (b) => b.serialNumber },
+            { key: 'name', label: 'Brand', width: '20%', render: (b) => batteryName(b) },
+            { key: 'status', label: 'Status', width: '12%', render: (b) => STATUS_BY_VALUE[b.status]?.label ?? b.status },
+            {
+              key: 'where',
+              label: 'Where',
+              width: '27%',
+              render: (b) =>
+                b.status === 'fitted'
+                  ? [b.assetLabel ?? b.assetId, [b.position, b.fittedAt && `since ${formatDateOnly(b.fittedAt)}`].filter(Boolean).join(' · ')]
+                  : b.status === 'scrapped'
+                    ? `Scrapped on ${formatDateOnly(b.scrappedAt)}`
+                    : b.status === 'ready'
+                      ? 'Store'
+                      : 'Repair',
+            },
+            { key: 'site', label: 'Site', width: '13%', render: (b) => b.siteName ?? '—' },
+          ],
+        },
+      ],
+    };
+  }
+
   return (
     <div>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -133,11 +184,14 @@ export default function BatteriesPage() {
           <h1 className="text-xl font-semibold text-steel-900">Batteries</h1>
           <p className="mt-1 text-steel-500">Every battery and where it is. Use the button on a row to fit, change, repair or scrap it.</p>
         </div>
-        <Can resource="BATTERY" action="CREATE">
-          <Button as={Link} to="/batteries/add">
-            + Add batteries
-          </Button>
-        </Can>
+        <div className="flex flex-wrap items-center gap-2">
+          <PrintReportButton buildReport={buildPrintReport} onError={setError} />
+          <Can resource="BATTERY" action="CREATE">
+            <Button as={Link} to="/batteries/add">
+              + Add batteries
+            </Button>
+          </Can>
+        </div>
       </div>
 
       <Alert tone="success">{notice}</Alert>

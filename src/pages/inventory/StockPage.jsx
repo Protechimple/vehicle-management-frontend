@@ -73,7 +73,8 @@ function latestPriceLines({ latestUnitCost: latest, previousUnitCost: previous }
 }
 
 const BIG_PRICE_JUMP = 0.1;
-const INLINE_BATCH_LIMIT = 3;
+// Prices shown in the row itself, on one line so the row stays short; the rest are under "+N more".
+const INLINE_BATCH_LIMIT = 2;
 
 const BATCH_SOURCE_LABEL = {
   OPENING_BALANCE: 'Opening stock',
@@ -120,7 +121,7 @@ function BoughtAt({ balance, onShowBatches }) {
   const groups = groupNeighboursByPrice(batches);
   const hidden = groups.length - INLINE_BATCH_LIMIT;
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex items-center gap-1.5 whitespace-nowrap">
       {groups.slice(0, INLINE_BATCH_LIMIT).map((group) => (
         <span key={group.key} className="rounded bg-steel-100 px-1.5 py-0.5 text-xs whitespace-nowrap text-steel-700 tabular-nums">
           {money(group.unitCost)} ({qty(group.remainingQuantity)})
