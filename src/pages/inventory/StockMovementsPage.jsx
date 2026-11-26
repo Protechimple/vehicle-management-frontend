@@ -6,7 +6,7 @@ import Can from '../../components/Can';
 import PrintReportButton from '../../components/PrintReport';
 import { useAuth } from '../../context/AuthContext';
 import useSiteNames from '../../hooks/useSiteNames';
-import { assetDescription, assetNumber } from '../../config/assetDetails';
+import { assetNumber } from '../../config/assetDetails';
 
 const PAGE_SIZE = 20;
 
@@ -53,7 +53,8 @@ function toRows(purchases, issues, transfers, adjustments) {
       reference: i.issueNumber,
       siteId: i.siteId,
       asset: assetNumber(i.assetType, i.assetId, i.asset),
-      details: `${assetDescription(i.assetType, i.assetId, i.asset)}${i.issuedToPerson ? ` — ${i.issuedToPerson}` : ''}`,
+      // The asset number is in its own column; details only say who it was handed to.
+      details: i.issuedToPerson ? `To ${i.issuedToPerson}` : '',
       status: i.status,
       detailPath: `/inventory/asset-issues/${i.id}`,
     })),
@@ -154,7 +155,8 @@ export default function StockMovementsPage() {
     {
       key: 'site',
       label: 'Site',
-      render: (r) => siteLabel(r, siteNames),
+      // A long site name wraps instead of widening the column.
+      render: (r) => <span className="block max-w-56 min-w-32 whitespace-normal">{siteLabel(r, siteNames)}</span>,
     },
     { key: 'asset', label: 'Asset', render: (r) => r.asset ?? <span className="text-steel-400">—</span> },
     { key: 'details', label: 'Details', wrap: true, render: (r) => r.details || <span className="text-steel-400">—</span> },

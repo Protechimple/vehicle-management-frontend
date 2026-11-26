@@ -26,6 +26,9 @@ const PRINTING_CLASS = 'printing-report';
 
 // A section's table. Columns may set a `width` (e.g. '10%'): the table then keeps those widths and text wraps
 // only between words, so every value stays inside its own column. Without widths the table sizes itself.
+// A section may set `continuesBelow(row)`: true leaves out the line under that row, so several rows read as one record
+// (then `count` gives how many records the heading shows). A column's `rowSpan(row)` stretches its cell down over
+// that many rows; 0 leaves the cell out because one above covers it.
 function PrintTable({ section }) {
   const fixed = section.columns.some((column) => column.width);
   const cellClass = (column) => {
@@ -60,12 +63,16 @@ function PrintTable({ section }) {
           </tr>
         ) : (
           section.rows.map((row) => (
-            <tr key={section.getRowKey(row)} className="break-inside-avoid border-b border-neutral-300">
-              {section.columns.map((column) => (
-                <td key={column.key} className={cellClass(column)}>
-                  <PrintCell value={column.render(row)} />
-                </td>
-              ))}
+            <tr key={section.getRowKey(row)} className={`break-inside-avoid ${section.continuesBelow?.(row) ? '' : 'border-b border-neutral-300'}`}>
+              {section.columns.map((column) => {
+                const span = column.rowSpan ? column.rowSpan(row) : 1;
+                if (span === 0) return null;
+                return (
+                  <td key={column.key} rowSpan={span > 1 ? span : undefined} className={cellClass(column)}>
+                    <PrintCell value={column.render(row)} />
+                  </td>
+                );
+              })}
             </tr>
           ))
         )}
@@ -119,7 +126,7 @@ export function PrintReportContent({ report, organizationName, userName, logoUrl
       {report.sections.map((section) => (
         <section key={section.title} className="mt-4">
           <h2 className="mb-1 text-xs font-semibold">
-            {section.title} ({section.rows.length})
+            {section.title} ({section.count ?? section.rows.length})
           </h2>
           <PrintTable section={section} />
         </section>

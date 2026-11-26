@@ -522,6 +522,32 @@ export const tyresApi = {
   costReport: (params, options) => api.get(`/tyres/reports/costs${toQueryString(params)}`, options),
 };
 
+// One catalog list of Centring Inventory: categories, sub-categories, units, items or suppliers.
+const centringCatalog = (path) => ({
+  list: (params) => api.get(`/centring/${path}${toQueryString(params)}`),
+  create: (payload) => api.post(`/centring/${path}`, payload),
+  update: (id, payload) => api.put(`/centring/${path}/${id}`, payload),
+  archive: (id) => api.post(`/centring/${path}/${id}/archive`),
+  restore: (id) => api.post(`/centring/${path}/${id}/restore`),
+});
+
+export const centringApi = {
+  options: () => api.get('/centring/options'),
+  sites: () => api.get('/centring/sites'),
+  stock: (params) => api.get(`/centring/stock${toQueryString(params)}`),
+  transactions: (params) => api.get(`/centring/transactions${toQueryString(params)}`),
+  reports: (params) => api.get(`/centring/reports${toQueryString(params)}`),
+  categories: centringCatalog('categories'),
+  subCategories: centringCatalog('sub-categories'),
+  units: centringCatalog('units'),
+  items: centringCatalog('items'),
+  suppliers: centringCatalog('suppliers'),
+  listEntries: (params) => api.get(`/centring/entries${toQueryString(params)}`),
+  getEntry: (id) => api.get(`/centring/entries/${id}`),
+  createEntry: (payload) => api.post('/centring/entries', payload),
+  deleteEntry: (id, confirmation) => api.delete(`/centring/entries/${id}`, { confirmation }),
+};
+
 export const batteriesApi = {
   list: (params) => api.get(`/batteries${toQueryString(params)}`),
   summary: (params) => api.get(`/batteries/summary${toQueryString(params)}`),
@@ -537,4 +563,5 @@ export const batteriesApi = {
   destroy: (id, confirmation) => api.delete(`/batteries/${id}`, { confirmation }),
   events: (params) => api.get(`/batteries/events${toQueryString(params)}`),
   costReport: (params) => api.get(`/batteries/reports/costs${toQueryString(params)}`),
+  assetReport: (params) => api.get(`/batteries/reports/assets${toQueryString(params)}`),
 };

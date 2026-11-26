@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { batteriesApi } from '../../api/client';
+import { batteriesApi, listAll } from '../../api/client';
 import { Alert, Input, Pagination, Select, Spinner, Table } from '../../components/ui';
+import PrintReportButton from '../../components/PrintReport';
 import { formatReading } from '../../components/batteries/BatteryForms';
 import { useAuth } from '../../context/AuthContext';
 import useSiteNames from '../../hooks/useSiteNames';
@@ -30,51 +31,41 @@ export function eventSentence(e) {
   }
 }
 
-function Totals({ totals }) {
-  const items = [
-    ['Bought', formatCurrency(totals.purchaseCost), `${totals.purchased} batteries`],
-    ['Repairs', formatCurrency(totals.repairCost), `${totals.repairs} repairs`],
-    ['Scrapped', String(totals.scrapped), totals.scrapValue ? `Sold for ${formatCurrency(totals.scrapValue)}` : null],
-  ];
-  return (
-    <dl className="mb-4 grid gap-3 sm:grid-cols-3">
-      {items.map(([label, value, hint]) => (
-        <div key={label} className="rounded border border-steel-200 bg-surface px-4 py-3">
-          <dt className="text-xs font-semibold tracking-wide text-steel-500 uppercase">{label}</dt>
-          <dd className="mt-1 text-xl font-semibold text-steel-900 tabular-nums">{value}</dd>
-          {hint && <dd className="text-xs text-steel-500">{hint}</dd>}
-        </div>
-      ))}
-    </dl>
-  );
+// The money of one history entry: what was paid for a battery or a repair, or what a scrapped battery sold for.
+export function eventAmount(e) {
+  if (e.amount == null) return null;
+  if (e.eventType === 'purchased') return { text: formatCurrency(e.amount), note: 'Cost' };
+  if (e.eventType === 'repaired') return { text: formatCurrency(e.amount), note: 'Repair cost' };
+  if (e.eventType === 'scrapped') return { text: formatCurrency(e.amount), note: 'Scrap sale' };
+  return null;
 }
 
 export default function BatteryHistoryPage() {
-  const { role, canPickSite, can } = useAuth();
-  const canSeeCosts = can('REPORTS', 'VIEW');
+  const { canPickSite } = useAuth();
   // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
   const picksSite = canPickSite;
   const siteNames = useSiteNames();
   const [filters, setFilters] = useState({ search: '', eventType: '', dateFrom: '', dateTo: '', siteId: '', page: 1 });
   const [result, setResult] = useState(null);
-  const [totals, setTotals] = useState(null);
   const [error, setError] = useState(null);
 
   const load = useCallback(async (active) => {
     setError(null);
-    const range = { dateFrom: active.dateFrom || undefined, dateTo: active.dateTo || undefined, siteId: active.siteId || undefined };
     try {
-      const [events, costs] = await Promise.all([
-        batteriesApi.events({ ...range, search: active.search || undefined, eventType: active.eventType || undefined, page: active.page }),
-        // Cost totals are a report, so they need Reports access too.
-        canSeeCosts ? batteriesApi.costReport(range) : null,
-      ]);
-      setResult(events);
-      setTotals(costs?.data.totals ?? null);
+      setResult(
+        await batteriesApi.events({
+          dateFrom: active.dateFrom || undefined,
+          dateTo: active.dateTo || undefined,
+          siteId: active.siteId || undefined,
+          search: active.search || undefined,
+          eventType: active.eventType || undefined,
+          page: active.page,
+        })
+      );
     } catch (err) {
       setError(err.message);
     }
-  }, [canSeeCosts]);
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => load(filters), 250);
@@ -107,17 +98,82 @@ export default function BatteryHistoryPage() {
         </div>
       ),
     },
+    {
+      key: 'amount',
+      label: 'Amount',
+      align: 'right',
+      render: (e) => {
+        const money = eventAmount(e);
+        if (!money) return <span className="text-steel-400">—</span>;
+        return (
+          <div className="flex flex-col items-end whitespace-nowrap">
+            <span className={`font-semibold tabular-nums ${e.eventType === 'scrapped' ? 'text-success-600' : 'text-steel-900'}`}>{money.text}</span>
+            <span className="text-xs text-steel-500">{money.note}</span>
+          </div>
+        );
+      },
+    },
     { key: 'siteName', label: 'Site', render: (e) => e.siteName ?? '—' },
     { key: 'by', label: 'Entered by', render: (e) => <span className="text-xs">{e.createdByName ?? '—'}</span> },
   ];
 
   const filtered = filters.search || filters.eventType || filters.dateFrom || filters.dateTo || filters.siteId;
 
+  // Every entry matching the filters, not just this page of them.
+  async function buildPrintReport() {
+    const { data } = await listAll(batteriesApi.events, {
+      search: filters.search || undefined,
+      eventType: filters.eventType || undefined,
+      dateFrom: filters.dateFrom || undefined,
+      dateTo: filters.dateTo || undefined,
+      siteId: filters.siteId || undefined,
+    });
+    return {
+      title: 'Battery History',
+      filters: [
+        ...(filters.search.trim() ? [{ label: 'Search', value: filters.search.trim() }] : []),
+        ...(filters.eventType ? [{ label: 'What happened', value: EVENT_LABELS[filters.eventType] ?? filters.eventType }] : []),
+        ...(filters.dateFrom ? [{ label: 'From', value: formatDateOnly(filters.dateFrom) }] : []),
+        ...(filters.dateTo ? [{ label: 'To', value: formatDateOnly(filters.dateTo) }] : []),
+        ...(filters.siteId ? [{ label: 'Site', value: siteNames[filters.siteId] ?? '—' }] : []),
+      ],
+      summary: [{ label: 'Entries', value: String(data.length) }],
+      sections: [
+        {
+          title: 'History',
+          rows: data,
+          getRowKey: (e) => e.id,
+          emptyMessage: 'Nothing matches these filters.',
+          columns: [
+            { key: 'date', label: 'Date', width: '11%', render: (e) => formatDateOnly(e.eventDate) },
+            { key: 'battery', label: 'Battery', width: '16%', render: (e) => [e.batteryCode, batteryName(e)] },
+            { key: 'what', label: 'What happened', width: '35%', render: (e) => [EVENT_LABELS[e.eventType] ?? e.eventType, eventSentence(e)] },
+            {
+              key: 'amount',
+              label: 'Amount',
+              align: 'right',
+              width: '13%',
+              render: (e) => {
+                const money = eventAmount(e);
+                return money ? [money.text, money.note] : '—';
+              },
+            },
+            { key: 'site', label: 'Site', width: '14%', render: (e) => e.siteName ?? '—' },
+            { key: 'by', label: 'Entered by', width: '11%', render: (e) => e.createdByName ?? '—' },
+          ],
+        },
+      ],
+    };
+  }
+
   return (
     <div>
-      <div className="mb-5">
-        <h1 className="text-xl font-semibold text-steel-900">Battery History</h1>
-        <p className="mt-1 text-steel-500">Everything that happened to your batteries, newest first. Leave the dates empty to see all.</p>
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold text-steel-900">Battery History</h1>
+          <p className="mt-1 text-steel-500">Everything that happened to your batteries, newest first. Leave the dates empty to see all.</p>
+        </div>
+        <PrintReportButton buildReport={buildPrintReport} onError={setError} />
       </div>
 
       <Alert tone="error">{error}</Alert>
@@ -145,8 +201,6 @@ export default function BatteryHistoryPage() {
           </Select>
         )}
       </div>
-
-      {totals && <Totals totals={totals} />}
 
       <div className="rounded border border-steel-200 bg-surface">
         {!result ? (
