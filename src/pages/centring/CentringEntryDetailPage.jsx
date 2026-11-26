@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { centringApi } from '../../api/client';
-import { Alert, Button, Card, Spinner, Table } from '../../components/ui';
+import { Alert, BackLink, Button, Card, Spinner, Table } from '../../components/ui';
 import Can from '../../components/Can';
 import DeleteWordModal from '../../components/DeleteWordModal';
 import { useAuth } from '../../context/AuthContext';
@@ -82,9 +82,7 @@ export default function CentringEntryDetailPage() {
     <div className="mx-auto max-w-5xl">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Link to="/centring/movements" className="text-sm font-semibold text-brand-600 hover:underline">
-            ← Centring Movements
-          </Link>
+          <BackLink to="/centring/movements" label="Centring Movements" />
           <h1 className="mt-1 flex flex-wrap items-center gap-2 text-xl font-semibold text-steel-900">
             {entry.entryNumber} <EntryTypeBadge type={entry.entryType} />
           </h1>

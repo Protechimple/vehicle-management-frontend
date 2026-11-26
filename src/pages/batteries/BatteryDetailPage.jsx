@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { batteriesApi } from '../../api/client';
-import { Alert, Button, Card, Field, Input, Modal, Spinner } from '../../components/ui';
+import { Alert, Button, Card, Field, Input, Modal, Spinner, BackLink } from '../../components/ui';
 import Can from '../../components/Can';
 import DeleteWordModal from '../../components/DeleteWordModal';
 import { ACTIONS, BatteryForm, BatteryStatusBadge, actionsFor } from '../../components/batteries/BatteryForms';
@@ -197,9 +197,7 @@ export default function BatteryDetailPage() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <Link to="/batteries" className="text-sm font-semibold text-brand-600 hover:underline">
-        ← Batteries
-      </Link>
+      <BackLink to="/batteries" label="Batteries" />
       <div className="mt-1 mb-1 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-xl font-semibold text-steel-900">{battery.batteryCode}</h1>

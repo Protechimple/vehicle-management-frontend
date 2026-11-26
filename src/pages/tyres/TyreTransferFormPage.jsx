@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { listAll, sitesApi, tyresApi } from '../../api/client';
-import { Alert, Button, Card, Field, Input, Select, Spinner } from '../../components/ui';
+import { Alert, Button, Card, Field, Input, Select, Spinner, BackLink } from '../../components/ui';
 import { STATUS_BY_VALUE, checkDateTime, nowDateTimeLocal, splitDateTime } from '../../config/tyres';
 
 export default function TyreTransferFormPage() {
@@ -105,9 +105,7 @@ export default function TyreTransferFormPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-4">
-        <Link to="/tyres/transfers" className="text-sm font-semibold text-brand-600 hover:underline">
-          ← Tyre Transfers
-        </Link>
+        <BackLink to="/tyres/transfers" label="Tyre Transfers" />
         <h1 className="mt-1 text-xl font-semibold text-steel-900">New tyre transfer</h1>
         <p className="mt-1 text-steel-500">Move tyres from one site's New or Spare Tyre Store to another site.</p>
       </div>

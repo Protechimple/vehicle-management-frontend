@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import {useNavigate, useParams} from 'react-router-dom';
 import { externalFuelApi, siteFuelStockApi, sitesApi, listAll } from '../../api/client';
-import { Alert, Button, Card, Field, Input, Select, Spinner } from '../../components/ui';
+import { Alert, Button, Card, Field, Input, Select, Spinner, BackLink } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
 import {
   EXTERNAL_CATEGORY,
@@ -186,9 +186,7 @@ export default function ExternalFuelFormPage() {
   }
 
   const backLink = (
-    <Link to="/fuel/external" className="text-sm font-semibold text-brand-600 hover:underline">
-      ← External vehicle fuel
-    </Link>
+    <BackLink to="/fuel/external" label="External vehicle fuel" />
   );
 
   if (loadError) {

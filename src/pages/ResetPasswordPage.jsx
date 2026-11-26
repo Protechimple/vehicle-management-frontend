@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { authApi } from '../api/client';
-import { Alert, Button, Field, Input, Spinner } from '../components/ui';
+import { Alert, Button, Field, Input, Spinner, BackLink } from '../components/ui';
 import AuthShell from './AuthShell';
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -91,9 +91,7 @@ export default function ResetPasswordPage() {
         title="Cannot reach the server"
         subtitle="The link itself may still be fine"
         footer={
-          <Link to="/login" className="font-semibold text-brand-600 hover:underline">
-            Back to sign in
-          </Link>
+          <BackLink to="/login" label="Back to sign in" className="ml-0" />
         }
       >
         <Alert tone="error">
@@ -109,9 +107,7 @@ export default function ResetPasswordPage() {
         title="Link expired"
         subtitle="This link cannot be used"
         footer={
-          <Link to="/login" className="font-semibold text-brand-600 hover:underline">
-            Back to sign in
-          </Link>
+          <BackLink to="/login" label="Back to sign in" className="ml-0" />
         }
       >
         <Alert tone="error">

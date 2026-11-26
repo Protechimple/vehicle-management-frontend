@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { tyresApi } from '../../api/client';
-import { Alert, Button, Card, Spinner, Table } from '../../components/ui';
+import { Alert, Button, Card, Spinner, Table, BackLink } from '../../components/ui';
 import Can from '../../components/Can';
 import { ACTIONS, TyreActionForm, TyreStatusBadge, TyreWhere, actionsFor } from '../../components/tyres/TyreForms';
 import { EVENT_LABELS, assetTyresPath, formatCurrency, formatNumber, formatRunTotals, formatWhen, meterUnit } from '../../config/tyres';
@@ -76,9 +76,7 @@ export default function TyreDetailPage() {
     <div className="mx-auto max-w-5xl">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Link to="/tyres/stores" className="text-sm font-semibold text-brand-600 hover:underline">
-            ← Tyre Stores
-          </Link>
+          <BackLink to="/tyres/stores" label="Tyre Stores" />
           <h1 className="mt-1 flex flex-wrap items-center gap-2 text-xl font-semibold text-steel-900">
             {tyre.tyreCode} <TyreStatusBadge status={tyre.status} />
           </h1>

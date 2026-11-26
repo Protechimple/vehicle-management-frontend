@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { tyresApi } from '../../api/client';
-import { Alert, Badge, Button, Card, Field, Select, Spinner } from '../../components/ui';
+import { Alert, Badge, Button, Card, Field, Select, Spinner, BackLink } from '../../components/ui';
 import Can from '../../components/Can';
 import ReportTable from '../../components/ReportTable';
 import { AddSparesForm, FitForm, TyreActionForm, useAssets } from '../../components/tyres/TyreForms';
@@ -369,9 +369,7 @@ export default function VehicleTyresPage() {
         </Select>
         </div>
         {assetKey && (
-          <Link to="/tyres/assets" className="text-sm font-semibold text-brand-600 hover:underline">
-            ← All vehicles
-          </Link>
+          <BackLink to="/tyres/assets" label="All vehicles" />
         )}
       </div>
 

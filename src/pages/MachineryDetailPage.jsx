@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { machineryApi, sitesApi } from '../api/client';
-import { Alert, Badge, Button, Card, Spinner } from '../components/ui';
+import { Alert, Badge, Button, Card, Spinner, BackLink } from '../components/ui';
 import Can from '../components/Can';
 import DeleteWordModal from '../components/DeleteWordModal';
 import AssetDocumentsCard from '../components/AssetDocumentsCard';
@@ -102,9 +102,7 @@ export default function MachineryDetailPage() {
     <div className="mx-auto max-w-4xl">
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Link to="/machinery" className="text-sm font-semibold text-brand-600 hover:underline">
-            ← All machinery
-          </Link>
+          <BackLink to="/machinery" label="All machinery" />
           <h1 className="mt-1 text-xl font-semibold text-steel-900">{machine.rcpl}</h1>
           <div className="mt-1 flex items-center gap-1.5">
             <Badge tone={machine.status === 'archived' ? 'neutral' : 'success'}>{machine.status}</Badge>
