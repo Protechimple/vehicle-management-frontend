@@ -17,6 +17,7 @@ import ProfilePage from './pages/ProfilePage';
 import VehiclesListPage from './pages/VehiclesListPage';
 import VehicleFormPage from './pages/VehicleFormPage';
 import VehicleDetailPage from './pages/VehicleDetailPage';
+import VehicleImportPage from './pages/VehicleImportPage';
 import MachineryListPage from './pages/MachineryListPage';
 import MachineryFormPage from './pages/MachineryFormPage';
 import MachineryDetailPage from './pages/MachineryDetailPage';
@@ -150,6 +151,7 @@ export default function App() {
         <Route path="/team" element={<ProtectedRoute anyOf={[['USERS', 'VIEW_TEAM']]}><TeamPage /></ProtectedRoute>} />
         <Route path="/vehicles" element={<ProtectedRoute anyOf={[['VEHICLE', 'READ']]}><VehiclesListPage /></ProtectedRoute>} />
         <Route path="/vehicles/new" element={<ProtectedRoute anyOf={[['VEHICLE', 'CREATE']]}><VehicleFormPage /></ProtectedRoute>} />
+        <Route path="/vehicles/import" element={<ProtectedRoute anyOf={[['VEHICLE', 'CREATE']]}><VehicleImportPage /></ProtectedRoute>} />
         <Route path="/vehicles/:id" element={<ProtectedRoute anyOf={[['VEHICLE', 'READ']]}><VehicleDetailPage /></ProtectedRoute>} />
         <Route path="/vehicles/:id/edit" element={<ProtectedRoute anyOf={[['VEHICLE', 'UPDATE']]}><VehicleFormPage /></ProtectedRoute>} />
         <Route path="/machinery" element={<ProtectedRoute anyOf={[['MACHINERY', 'READ']]}><MachineryListPage /></ProtectedRoute>} />

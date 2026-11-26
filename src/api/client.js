@@ -170,6 +170,64 @@ async function createAssetWithDocuments(path, payload, files = {}) {
   return responseBody;
 }
 
+// Sends a FormData body. A failed response keeps its body's data on the error, e.g. an import preview with row errors.
+async function sendForm(method, path, form) {
+  const headers = { Accept: 'application/json' };
+  const token = readToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  let response;
+  try {
+    response = await fetch(`${BASE_URL}${path}`, { method, headers, body: form });
+  } catch {
+    throw new ApiError(0, 'Cannot reach the server. Check that the API is running.');
+  }
+
+  const payload = await readBody(response);
+  if (response.ok) return payload;
+  endSessionIfExpired(response, token);
+  const error = new ApiError(response.status, payload?.error ?? `Request failed (${response.status})`);
+  if (payload?.data) error.data = payload.data;
+  throw error;
+}
+
+async function fetchBlob(path, { signal } = {}) {
+  const headers = {};
+  const token = readToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  let response;
+  try {
+    response = await fetch(`${BASE_URL}${path}`, { headers, signal });
+  } catch (error) {
+    if (error.name === 'AbortError') throw error;
+    throw new ApiError(0, 'Cannot reach the server. Check that the API is running.');
+  }
+  if (!response.ok) {
+    const payload = await readBody(response);
+    endSessionIfExpired(response, token);
+    throw new ApiError(response.status, payload?.error ?? `Request failed (${response.status})`);
+  }
+  return response.blob();
+}
+
+function saveBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function sheetForm(file) {
+  const form = new FormData();
+  form.append('file', file);
+  return form;
+}
+
 export const vehiclesApi = {
   list: (params) => api.get(`/vehicles${toQueryString(params)}`),
   get: (id) => api.get(`/vehicles/${id}`),
@@ -179,6 +237,9 @@ export const vehiclesApi = {
   restore: (id) => api.post(`/vehicles/${id}/restore`),
   history: (id) => api.get(`/vehicles/${id}/history`),
   costs: (id) => api.get(`/vehicles/${id}/costs`),
+  downloadImportTemplate: async () => saveBlob(await fetchBlob('/vehicles/import/template'), 'vehicle-import-template.xlsx'),
+  importPreview: (file) => sendForm('POST', '/vehicles/import/preview', sheetForm(file)),
+  importCommit: (file) => sendForm('POST', '/vehicles/import', sheetForm(file)),
 };
 
 async function uploadAssetDocument(assetType, assetId, docType, file) {
@@ -235,6 +296,20 @@ async function downloadAssetDocument(assetType, assetId, docType, suggestedFilen
   link.remove();
   URL.revokeObjectURL(url);
 }
+
+export const assetPhotosApi = {
+  list: (assetType, assetId) => api.get(`/photos/${assetType}/${assetId}`),
+  upload: (assetType, assetId, { photo, thumb, filename }) => {
+    const form = new FormData();
+    form.append('photo', photo, filename);
+    if (thumb) form.append('thumb', thumb, `thumb-${filename}`);
+    return sendForm('POST', `/photos/${assetType}/${assetId}`, form);
+  },
+  setCover: (assetType, assetId, photoId) => api.put(`/photos/${assetType}/${assetId}/${photoId}/cover`),
+  remove: (assetType, assetId, photoId) => api.delete(`/photos/${assetType}/${assetId}/${photoId}`),
+  fetchImage: (assetType, assetId, photoId, size, options) =>
+    fetchBlob(`/photos/${assetType}/${assetId}/${photoId}/file${size === 'thumb' ? '?size=thumb' : ''}`, options),
+};
 
 export const assetDocumentsApi = {
   list: (assetType, assetId) => api.get(`/documents/${assetType}/${assetId}`),

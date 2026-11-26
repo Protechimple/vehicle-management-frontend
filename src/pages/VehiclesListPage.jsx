@@ -1,15 +1,29 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { vehiclesApi } from '../api/client';
 import { Alert, Badge, Button, Input, Pagination, Select, Spinner, Table } from '../components/ui';
 import Can from '../components/Can';
 import { useAuth } from '../context/AuthContext';
 import useSiteNames from '../hooks/useSiteNames';
+import AssetPhoto from '../components/AssetPhoto';
+import { DOCUMENT_LABELS } from '../config/assetDocuments';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Active (default)' },
   { value: 'archived', label: 'Archived' },
 ];
+
+const DOCUMENT_FILTER_OPTIONS = [
+  { value: '', label: 'Any documents' },
+  { value: 'true', label: 'Documents missing' },
+];
+
+function MissingDocsBadge({ vehicle }) {
+  if (!vehicle.missingDocTypes?.length) return null;
+  return (
+    <Badge tone="danger">{vehicle.missingDocTypes.map((docType) => DOCUMENT_LABELS[docType] ?? docType).join(', ')} missing</Badge>
+  );
+}
 
 function ServiceDueBadge({ vehicle }) {
   if (!vehicle.isServiceDue) return null;
@@ -20,10 +34,12 @@ export default function VehiclesListPage() {
   const { role, canPickSite } = useAuth();
   // Admins, and anyone with several sites, choose which site; everyone else always works at their one site.
   const picksSite = canPickSite;
+  const [searchParams] = useSearchParams();
   const [filters, setFilters] = useState({
     search: '',
     status: '',
     siteId: '',
+    docsMissing: searchParams.get('docsMissing') === 'true' ? 'true' : '',
     page: 1,
     sort: 'createdAt:desc',
   });
@@ -39,11 +55,12 @@ export default function VehiclesListPage() {
         search: activeFilters.search || undefined,
         status: activeFilters.status || undefined,
         siteId: activeFilters.siteId || undefined,
+        docsMissing: activeFilters.docsMissing || undefined,
         page: activeFilters.page,
         sort: activeFilters.sort,
       });
       setResult(response);
-      if (!activeFilters.search && !activeFilters.siteId) setOverallTotal(response.pagination.total);
+      if (!activeFilters.search && !activeFilters.siteId && !activeFilters.docsMissing) setOverallTotal(response.pagination.total);
     } catch (err) {
       setError(err.message);
     }
@@ -69,8 +86,31 @@ export default function VehiclesListPage() {
   const [sortField, sortDirection] = filters.sort.split(':');
 
   const columns = [
+    {
+      key: 'photo',
+      label: '',
+      render: (v) => (
+        <AssetPhoto
+          assetType="VEHICLE"
+          assetId={v.assetId}
+          photoId={v.coverPhotoId}
+          alt={v.registrationNumber}
+          className="size-10 rounded"
+        />
+      ),
+    },
     { key: 'assetId', label: 'Asset ID', sortable: true },
-    { key: 'registrationNumber', label: 'Registration', sortable: true },
+    {
+      key: 'registrationNumber',
+      label: 'Registration',
+      sortable: true,
+      render: (v) => (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span>{v.registrationNumber}</span>
+          <MissingDocsBadge vehicle={v} />
+        </div>
+      ),
+    },
     { key: 'type', label: 'Type' },
     {
       key: 'currentKM',
@@ -118,18 +158,23 @@ export default function VehiclesListPage() {
               </span>
             )}
           </h1>
-          <p className="mt-1 text-steel-500">KM-based assets in your fleet.</p>
+          <p className="mt-1 text-steel-500">Light vehicles tracked in KM, heavy vehicles in hours.</p>
         </div>
         <Can resource="VEHICLE" action="CREATE">
-          <Button as={Link} to="/vehicles/new">
-            Add vehicle
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button as={Link} to="/vehicles/import" variant="secondary">
+              Import from Excel
+            </Button>
+            <Button as={Link} to="/vehicles/new">
+              Add vehicle
+            </Button>
+          </div>
         </Can>
       </div>
 
       {error && <Alert tone="error">{error}</Alert>}
 
-      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${picksSite ? 'lg:grid-cols-3' : ''}`}>
+      <div className={`mb-4 grid gap-3 sm:grid-cols-2 ${picksSite ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
         <Input
           placeholder="Search asset ID, registration, model..."
           value={filters.search}
@@ -137,6 +182,17 @@ export default function VehiclesListPage() {
         />
         <Select value={filters.status} onChange={(e) => updateFilter('status', e.target.value)}>
           {STATUS_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </Select>
+        <Select
+          aria-label="Documents"
+          value={filters.docsMissing}
+          onChange={(e) => updateFilter('docsMissing', e.target.value)}
+        >
+          {DOCUMENT_FILTER_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>

@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { vehiclesApi, sitesApi } from '../api/client';
 import { Alert, Badge, Button, Card, Spinner } from '../components/ui';
 import Can from '../components/Can';
 import DeleteWordModal from '../components/DeleteWordModal';
 import AssetDocumentsCard from '../components/AssetDocumentsCard';
 import AssetCostCard from '../components/AssetCostCard';
+import AssetPhotosCard from '../components/AssetPhotosCard';
+import AssetPhoto from '../components/AssetPhoto';
+import { DOCUMENT_LABELS } from '../config/assetDocuments';
 
 function Detail({ label, children }) {
   return (
@@ -24,6 +27,7 @@ function formatDate(value) {
 export default function VehicleDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const photoUploadErrors = useLocation().state?.photoUploadErrors ?? [];
 
   const [vehicle, setVehicle] = useState(null);
   const [siteName, setSiteName] = useState(null);
@@ -101,14 +105,23 @@ export default function VehicleDetailPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link to="/vehicles" className="text-sm font-semibold text-brand-600 hover:underline">
-            ← All vehicles
-          </Link>
-          <h1 className="mt-1 text-xl font-semibold text-steel-900">{vehicle.registrationNumber}</h1>
-          <div className="mt-1 flex items-center gap-1.5">
-            <Badge tone={vehicle.status === 'archived' ? 'neutral' : 'success'}>{vehicle.status}</Badge>
-            {vehicle.isServiceDue && <Badge tone="warning">Service due</Badge>}
+        <div className="flex items-start gap-3">
+          <AssetPhoto
+            assetType="VEHICLE"
+            assetId={vehicle.assetId}
+            photoId={vehicle.coverPhotoId}
+            alt={vehicle.registrationNumber}
+            className="mt-1 size-16 shrink-0 rounded border border-steel-200"
+          />
+          <div>
+            <Link to="/vehicles" className="text-sm font-semibold text-brand-600 hover:underline">
+              ← All vehicles
+            </Link>
+            <h1 className="mt-1 text-xl font-semibold text-steel-900">{vehicle.registrationNumber}</h1>
+            <div className="mt-1 flex items-center gap-1.5">
+              <Badge tone={vehicle.status === 'archived' ? 'neutral' : 'success'}>{vehicle.status}</Badge>
+              {vehicle.isServiceDue && <Badge tone="warning">Service due</Badge>}
+            </div>
           </div>
         </div>
 
@@ -151,6 +164,24 @@ export default function VehicleDetailPage() {
         )}
       </div>
 
+      {photoUploadErrors.length > 0 && (
+        <Alert tone="error">
+          The vehicle was created, but some photos did not upload. Add them again in the Photos section:
+          <ul className="mt-1 list-disc pl-4">
+            {photoUploadErrors.map((message) => (
+              <li key={message}>{message}</li>
+            ))}
+          </ul>
+        </Alert>
+      )}
+
+      {vehicle.missingDocTypes?.length > 0 && (
+        <Alert tone="warning">
+          {vehicle.missingDocTypes.map((docType) => DOCUMENT_LABELS[docType] ?? docType).join(' and ')} not uploaded yet.
+          Upload {vehicle.missingDocTypes.length > 1 ? 'them' : 'it'} in the Documents section below.
+        </Alert>
+      )}
+
       <Card title="Vehicle details">
         <dl className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <Detail label="Asset ID">{vehicle.assetId}</Detail>
@@ -191,7 +222,8 @@ export default function VehicleDetailPage() {
       </Card>
 
       <Can resource="DOCUMENT" action="READ">
-        <AssetDocumentsCard assetType="VEHICLE" assetId={vehicle.assetId} />
+        <AssetPhotosCard assetType="VEHICLE" assetId={vehicle.assetId} onChange={load} />
+        <AssetDocumentsCard assetType="VEHICLE" assetId={vehicle.assetId} onChange={load} />
       </Can>
 
       <AssetCostCard assetType="VEHICLE" asset={vehicle} />

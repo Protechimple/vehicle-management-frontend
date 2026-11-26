@@ -4,6 +4,7 @@ import { vehiclesApi, sitesApi, complianceApi, listAll } from '../api/client';
 import { Alert, Button, Card, Field, Input, Select, Spinner } from '../components/ui';
 import ComplianceFields, { EMPTY_COMPLIANCE, getComplianceDateErrors } from '../components/ComplianceFields';
 import AssetDocumentFields from '../components/AssetDocumentFields';
+import { MAX_PHOTOS, PHOTO_ACCEPT, uploadPhotos } from '../components/AssetPhotosCard';
 import { DOCUMENT_LABELS, getMissingMandatoryDocTypes } from '../config/assetDocuments';
 import { VEHICLE_TYPE_OPTIONS, HOURS_BASED_VEHICLE_TYPE } from '../config/vehicleTypes';
 import { FUEL_TYPE_OPTIONS } from '../config/fuelTypes';
@@ -57,6 +58,8 @@ export default function VehicleFormPage() {
   const [archivedSite, setArchivedSite] = useState(null);
   const [documentFiles, setDocumentFiles] = useState({});
   const [showMissingDocs, setShowMissingDocs] = useState(false);
+  const [photoFiles, setPhotoFiles] = useState([]);
+  const [photoProgress, setPhotoProgress] = useState(null);
   const [loading, setLoading] = useState(isEdit);
   const [loadError, setLoadError] = useState(null);
   const [submitError, setSubmitError] = useState(null);
@@ -151,7 +154,14 @@ export default function VehicleFormPage() {
       const response = isEdit
         ? await vehiclesApi.update(id, payload)
         : await vehiclesApi.create(payload, documentFiles);
-      navigate(`/vehicles/${response.data.id}`);
+      // The vehicle exists now, so a photo that fails is reported on its page rather than blocking here.
+      const photoUploadErrors =
+        !isEdit && photoFiles.length > 0
+          ? await uploadPhotos('VEHICLE', response.data.assetId, photoFiles, (done, total) =>
+              setPhotoProgress({ done, total })
+            )
+          : [];
+      navigate(`/vehicles/${response.data.id}`, { state: photoUploadErrors.length ? { photoUploadErrors } : undefined });
     } catch (err) {
       setSubmitError(err.message);
     } finally {
@@ -397,12 +407,67 @@ export default function VehicleFormPage() {
             />
           )}
 
+          {!isEdit && (
+            <section className="mt-5 border-t border-steel-100 pt-4">
+              <h2 className="text-sm font-semibold text-steel-900">Photos</h2>
+              <p className="mt-0.5 text-sm text-steel-500">
+                Optional — up to {MAX_PHOTOS}. The first becomes the cover. You can also add them later on the vehicle’s page.
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <label className="inline-flex cursor-pointer items-center rounded border border-steel-300 px-3 py-1.5 text-sm font-semibold text-steel-700 hover:bg-steel-50">
+                  Choose photos
+                  <input
+                    type="file"
+                    accept={PHOTO_ACCEPT}
+                    multiple
+                    className="sr-only"
+                    onChange={(event) => {
+                      const chosen = [...(event.target.files ?? [])];
+                      event.target.value = '';
+                      setPhotoFiles((current) => [...current, ...chosen].slice(0, MAX_PHOTOS));
+                    }}
+                  />
+                </label>
+                <span className="text-sm text-steel-500">
+                  {photoFiles.length} of {MAX_PHOTOS} chosen
+                </span>
+              </div>
+              {photoFiles.length > 0 && (
+                <ul className="mt-2 flex flex-wrap gap-2">
+                  {photoFiles.map((file, index) => (
+                    <li
+                      key={`${file.name}-${index}`}
+                      className="flex items-center gap-1.5 rounded border border-steel-200 px-2 py-1 text-xs text-steel-700"
+                    >
+                      {index === 0 && <span className="font-semibold text-brand-700">Cover ·</span>}
+                      <span className="max-w-40 truncate" title={file.name}>
+                        {file.name}
+                      </span>
+                      <button
+                        type="button"
+                        aria-label={`Remove ${file.name}`}
+                        className="text-steel-400 hover:text-danger-600"
+                        onClick={() => setPhotoFiles((current) => current.filter((_, i) => i !== index))}
+                      >
+                        ✕
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+
           <div className="flex flex-col-reverse gap-2 pt-3 sm:flex-row sm:justify-end">
             <Button variant="secondary" onClick={() => navigate(-1)}>
               Cancel
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? 'Save changes' : 'Create vehicle'}
+              {photoProgress
+                ? `Uploading photo ${photoProgress.done} of ${photoProgress.total}…`
+                : isEdit
+                  ? 'Save changes'
+                  : 'Create vehicle'}
             </Button>
           </div>
         </form>
