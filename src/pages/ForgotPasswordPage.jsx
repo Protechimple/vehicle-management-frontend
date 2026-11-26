@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { authApi } from '../api/client';
-import { Alert, Button, Field, Input } from '../components/ui';
+import { Alert, Button, Field, Input, BackLink } from '../components/ui';
 import AuthShell from './AuthShell';
 
 export default function ForgotPasswordPage() {
@@ -30,9 +29,7 @@ export default function ForgotPasswordPage() {
       title="Reset your password"
       subtitle="We will email you a link to choose a new password"
       footer={
-        <Link to="/login" className="font-semibold text-brand-600 hover:underline">
-          Back to sign in
-        </Link>
+        <BackLink to="/login" label="Back to sign in" className="ml-0" />
       }
     >
       {message ? (

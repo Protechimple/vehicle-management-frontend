@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { fuelCollectionsApi, fuelStationsApi, vehiclesApi, listAll } from '../../api/client';
-import { Alert, Button, Card, Field, Input, Select, Spinner } from '../../components/ui';
+import { Alert, Button, Card, Field, Input, Select, Spinner, BackLink } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
 import useSiteNames from '../../hooks/useSiteNames';
 import { STORABLE_FUEL_TYPES, formatCurrency, formatLitres, todayDateOnly } from '../../config/fuel';
@@ -151,9 +151,7 @@ export default function FuelCollectionFormPage() {
     return (
       <div className="mx-auto max-w-4xl">
         <Alert tone="error">{loadError}</Alert>
-        <Link to="/fuel/collections" className="text-sm font-semibold text-brand-600 hover:underline">
-          ← Back to fuel collections
-        </Link>
+        <BackLink to="/fuel/collections" label="Back to fuel collections" />
       </div>
     );
   }
@@ -165,9 +163,7 @@ export default function FuelCollectionFormPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-3">
-        <Link to={isEdit ? `/fuel/collections/${id}` : '/fuel/collections'} className="text-sm font-semibold text-brand-600 hover:underline">
-          ← {isEdit ? existing.collectionNumber : 'Fuel collections'}
-        </Link>
+        <BackLink to={isEdit ? `/fuel/collections/${id}` : '/fuel/collections'} label={isEdit ? existing.collectionNumber : 'Fuel collections'} />
         <h1 className="mt-1 text-xl font-semibold text-steel-900">{isEdit ? 'Edit fuel collection' : 'Record fuel collection'}</h1>
         <p className="mt-1 text-steel-500">Fuel filled into cans at the pump. It stays in transit, and can't be issued, until the site receives it.</p>
       </div>

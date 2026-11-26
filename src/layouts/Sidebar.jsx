@@ -117,6 +117,17 @@ const NAV_SECTIONS = [
       { to: '/batteries', end: true, label: 'All Batteries', anyOf: VIEW('BATTERY') },
       { to: '/batteries/add', label: 'Add Batteries', anyOf: [['BATTERY', 'CREATE']] },
       { to: '/batteries/history', label: 'Battery History', anyOf: VIEW('BATTERY') },
+      { to: '/batteries/reports', label: 'Battery Reports', allOf: [['BATTERY', 'READ'], ['REPORTS', 'VIEW']] },
+    ],
+  },
+  {
+    title: 'Centring Inventory',
+    paths: ['/centring'],
+    links: [
+      { to: '/centring/catalog', label: 'Centring Catalog', anyOf: VIEW('CENTRING') },
+      { to: '/centring/movements', label: 'Centring Movements', anyOf: VIEW('CENTRING') },
+      { to: '/centring/stock', label: 'Centring Stock', anyOf: VIEW('CENTRING') },
+      { to: '/centring/reports', label: 'Centring Reports', allOf: [['CENTRING', 'VIEW_COST']] },
     ],
   },
   {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { tyresApi } from '../../api/client';
-import { Alert, Badge, Button, Card, Spinner, Table } from '../../components/ui';
+import { Alert, Badge, Button, Card, Spinner, Table, BackLink } from '../../components/ui';
 import Can from '../../components/Can';
 import DeleteWordModal from '../../components/DeleteWordModal';
 import { STATUS_BY_VALUE, formatCurrency, formatNumber, formatWhen } from '../../config/tyres';
@@ -94,9 +94,7 @@ export default function TyrePurchaseDetailPage() {
     <div className="mx-auto max-w-4xl">
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Link to="/tyres/purchases" className="text-sm font-semibold text-brand-600 hover:underline">
-            ← Tyre purchases
-          </Link>
+          <BackLink to="/tyres/purchases" label="Tyre purchases" />
           <h1 className="mt-1 text-xl font-semibold text-steel-900">{purchase.purchaseNumber}</h1>
           <div className="mt-2">
             <Badge tone={active ? 'success' : 'neutral'}>{active ? 'Added to New Tyre Store' : 'Cancelled'}</Badge>

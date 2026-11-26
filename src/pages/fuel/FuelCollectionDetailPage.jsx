@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { fuelCollectionsApi } from '../../api/client';
-import { Alert, Badge, Button, Card, Field, Input, Modal, Spinner, Table } from '../../components/ui';
+import { Alert, Badge, Button, Card, Field, Input, Modal, Spinner, Table, BackLink } from '../../components/ui';
 import Can from '../../components/Can';
 import DeleteWordModal from '../../components/DeleteWordModal';
 import { COLLECTION_STATUS, formatCurrency, formatDateOnly, formatLitres, todayDateOnly } from '../../config/fuel';
@@ -171,9 +171,7 @@ export default function FuelCollectionDetailPage() {
     return (
       <div className="mx-auto max-w-4xl">
         <Alert tone="error">{loadError}</Alert>
-        <Link to="/fuel/collections" className="text-sm font-semibold text-brand-600 hover:underline">
-          ← Back to fuel collections
-        </Link>
+        <BackLink to="/fuel/collections" label="Back to fuel collections" />
       </div>
     );
   }
@@ -186,9 +184,7 @@ export default function FuelCollectionDetailPage() {
     <div className="mx-auto max-w-4xl">
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Link to="/fuel/collections" className="text-sm font-semibold text-brand-600 hover:underline">
-            ← Fuel collections
-          </Link>
+          <BackLink to="/fuel/collections" label="Fuel collections" />
           <h1 className="mt-1 text-xl font-semibold text-steel-900">{collection.collectionNumber}</h1>
           <div className="mt-1">
             <Badge tone={status?.tone}>{status?.label ?? collection.status}</Badge>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { platformApi } from '../../api/platformClient';
-import { Alert, Button, Card, Field, Input, Spinner } from '../../components/ui';
+import { Alert, Button, Card, Field, Input, Spinner, BackLink } from '../../components/ui';
 import TemporaryPasswordField, { MIN_PASSWORD_LENGTH } from './TemporaryPasswordField';
 import { PageHeader } from './tenantDisplay';
 
@@ -136,9 +136,7 @@ export default function TenantFormPage() {
     <div className="max-w-3xl">
       <PageHeader
         back={
-          <Link to={backTo} className="mb-3 inline-block text-sm text-brand-600 hover:underline">
-            ← {isCreate ? 'All organizations' : 'Back to organization'}
-          </Link>
+          <BackLink to={backTo} label={isCreate ? 'All organizations' : 'Back to organization'} className="mb-2" />
         }
         title={isCreate ? 'Create organization' : 'Edit organization'}
         description={

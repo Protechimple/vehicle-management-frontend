@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { vehiclesApi, sitesApi } from '../api/client';
-import { Alert, Badge, Button, Card, Spinner } from '../components/ui';
+import { Alert, Badge, Button, Card, Spinner, BackLink } from '../components/ui';
 import Can from '../components/Can';
 import DeleteWordModal from '../components/DeleteWordModal';
 import AssetDocumentsCard from '../components/AssetDocumentsCard';
@@ -114,9 +114,7 @@ export default function VehicleDetailPage() {
             className="mt-1 size-16 shrink-0 rounded border border-steel-200"
           />
           <div>
-            <Link to="/vehicles" className="text-sm font-semibold text-brand-600 hover:underline">
-              ← All vehicles
-            </Link>
+            <BackLink to="/vehicles" label="All vehicles" />
             <h1 className="mt-1 text-xl font-semibold text-steel-900">{vehicle.registrationNumber}</h1>
             <div className="mt-1 flex items-center gap-1.5">
               <Badge tone={vehicle.status === 'archived' ? 'neutral' : 'success'}>{vehicle.status}</Badge>

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { vehiclesApi } from '../api/client';
-import { Alert, Badge, Button, Card, Spinner } from '../components/ui';
+import { Alert, Badge, Button, Card, Spinner, BackLink } from '../components/ui';
 
 function meterText(values) {
   if (values.currentHours != null) return `${values.currentHours} hrs`;
@@ -132,9 +132,7 @@ export default function VehicleImportPage() {
   return (
     <div className="mx-auto max-w-5xl">
       <div className="mb-5">
-        <Link to="/vehicles" className="text-sm font-semibold text-brand-600 hover:underline">
-          ← All vehicles
-        </Link>
+        <BackLink to="/vehicles" label="All vehicles" />
         <h1 className="mt-1 text-xl font-semibold text-steel-900">Import vehicles from Excel</h1>
         <p className="mt-1 text-steel-500">
           Add many vehicles at once. Nothing is saved until every row is valid. Documents and photos are added on each

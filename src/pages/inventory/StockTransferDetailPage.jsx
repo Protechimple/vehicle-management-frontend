@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { stockTransfersApi } from '../../api/client';
-import { Alert, Badge, Button, Card, Modal, Spinner, Table } from '../../components/ui';
+import { Alert, Badge, Button, Card, Modal, Spinner, Table, BackLink } from '../../components/ui';
 import Can from '../../components/Can';
 import { useAuth } from '../../context/AuthContext';
 
@@ -86,9 +86,7 @@ export default function StockTransferDetailPage() {
     <div className="mx-auto max-w-4xl">
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Link to="/inventory/movements" state={{ type: "TRANSFER" }} className="text-sm font-semibold text-brand-600 hover:underline">
-            ← All stock transfers
-          </Link>
+          <BackLink to="/inventory/movements" state={{ type: "TRANSFER" }} label="All stock transfers" />
           <h1 className="mt-1 text-xl font-semibold text-steel-900">{transfer.transferNumber}</h1>
           <div className="mt-1">
             <StatusBadge status={transfer.status} />

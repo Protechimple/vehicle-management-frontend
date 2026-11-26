@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { platformApi } from '../../api/platformClient';
-import { Alert, Button, Card, Modal, Pagination, Spinner, Tabs } from '../../components/ui';
+import { Alert, Button, Card, Modal, Pagination, Spinner, Tabs, BackLink } from '../../components/ui';
 import ActivityFeed from './ActivityFeed';
 import TemporaryPasswordField, { MIN_PASSWORD_LENGTH } from './TemporaryPasswordField';
 import {
@@ -204,9 +204,7 @@ export default function TenantDetailPage() {
   }
 
   const backLink = (
-    <Link to="/platform/tenants" className="mb-3 inline-block text-sm text-brand-600 hover:underline">
-      ← All organizations
-    </Link>
+    <BackLink to="/platform/tenants" label="All organizations" className="mb-2" />
   );
 
   if (error && !tenant) {

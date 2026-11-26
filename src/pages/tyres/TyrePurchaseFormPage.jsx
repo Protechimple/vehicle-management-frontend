@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { sitesApi, tyresApi, listAll } from '../../api/client';
-import { Alert, Button, Card, Field, Input, Select } from '../../components/ui';
+import { Alert, Button, Card, Field, Input, Select, BackLink } from '../../components/ui';
 import TyreTypeModal from '../../components/tyres/TyreTypeModal';
 import { useAuth } from '../../context/AuthContext';
 import useSiteNames from '../../hooks/useSiteNames';
@@ -116,9 +116,7 @@ export default function TyrePurchaseFormPage() {
   return (
     <div className="mx-auto max-w-5xl">
       <div className="mb-3">
-        <Link to="/tyres/purchases" className="text-sm font-semibold text-brand-600 hover:underline">
-          ← Tyre purchases
-        </Link>
+        <BackLink to="/tyres/purchases" label="Tyre purchases" />
         <h1 className="mt-1 text-xl font-semibold text-steel-900">New tyre purchase</h1>
         <p className="mt-1 text-steel-500">One supplier bill, many tyres. Each tyre gets its own Tyre ID and goes into the site's New Tyre Store.</p>
       </div>

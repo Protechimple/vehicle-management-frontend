@@ -6,14 +6,14 @@ import UnitsOfMeasurePage from './UnitsOfMeasurePage';
 import SuppliersPage from './SuppliersPage';
 
 const TABS = [
-  { value: 'items', label: 'Items', Page: ItemsPage },
   { value: 'categories', label: 'Categories', Page: ItemCategoriesPage },
   { value: 'units', label: 'Units of Measure', Page: UnitsOfMeasurePage },
   { value: 'suppliers', label: 'Suppliers', Page: SuppliersPage },
+  { value: 'items', label: 'Items', Page: ItemsPage },
 ];
 
 export default function ItemCatalogPage() {
-  const [tab, setTab] = useState('items');
+  const [tab, setTab] = useState(TABS[0].value);
   const ActivePage = TABS.find((t) => t.value === tab).Page;
 
   return (
