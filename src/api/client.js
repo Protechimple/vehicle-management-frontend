@@ -444,10 +444,12 @@ export const accessApi = {
 
 export const dashboardApi = {
   summary: (params) => api.get(`/dashboard/summary${toQueryString(params)}`),
-  sites: (params) => api.get(`/dashboard/sites${toQueryString(params)}`),
   monthlyCost: (params) => api.get(`/dashboard/monthly-cost${toQueryString(params)}`),
   fleet: (params) => api.get(`/dashboard/fleet${toQueryString(params)}`),
   maintenance: (params) => api.get(`/dashboard/maintenance${toQueryString(params)}`),
+  tyres: (params) => api.get(`/dashboard/tyres${toQueryString(params)}`),
+  adblue: (params) => api.get(`/dashboard/adblue${toQueryString(params)}`),
+  centring: (params) => api.get(`/dashboard/centring${toQueryString(params)}`),
 };
 
 async function uploadBrandingLogo(file) {

@@ -38,6 +38,16 @@ function StoreTabs({ active, counts, onChange }) {
   );
 }
 
+// The small line under a tyre's total cost: the repairs included in it.
+function costNotes(t) {
+  return t.repairCost > 0 ? [`incl. repairs ${formatCurrency(t.repairCost)}`] : [];
+}
+
+// Scrapped tab only: what the scrap dealer paid for the tyre.
+function scrapValueText(t) {
+  return t.scrapValue != null ? formatCurrency(t.scrapValue) : '—';
+}
+
 // "Where" as plain text for the PDF (an array is printed as lines).
 function whereText(t) {
   if (t.status === 'fitted') return [t.assetLabel ?? t.assetId, t.position, `Since ${formatWhen(t.fittedAt, t.fittedTime)} · ${formatNumber(t.fitReading)} ${meterUnit(t.meterType)}`];
@@ -45,25 +55,30 @@ function whereText(t) {
   return [`${STATUS_BY_VALUE[t.status]?.label} · ${t.siteName ?? '—'}`, t.ownerLabel ? `Spare of ${t.ownerLabel}` : null];
 }
 
-export function storePrintColumns() {
+// The Scrapped tab adds a Scrap Value column; its "Where" is just the scrap date, so it gives up the room.
+export function storePrintColumns(status) {
+  const scrapped = status === 'scrapped';
   return [
-    { key: 'tyre', label: 'Tyre', width: '11%', render: (t) => [t.tyreCode, t.serialNumber ? `SN ${t.serialNumber}` : null] },
-    { key: 'brand', label: 'Brand', width: '8%', render: (t) => t.tyreBrand ?? '—' },
+    { key: 'tyre', label: 'Tyre', width: '15%', render: (t) => [t.tyreCode, t.serialNumber ? `SN ${t.serialNumber}` : null] },
+    { key: 'brand', label: 'Brand', width: '10%', render: (t) => t.tyreBrand ?? '—' },
     { key: 'pattern', label: 'Pattern / Model', width: '10%', render: (t) => t.tyrePattern ?? '—' },
     { key: 'size', label: 'Size', width: '8%', render: (t) => t.tyreSize ?? '—' },
     { key: 'status', label: 'Status', width: '7%', render: (t) => STATUS_BY_VALUE[t.status]?.short ?? t.status },
-    { key: 'where', label: 'Where', width: '34%', render: (t) => whereText(t) },
+    { key: 'where', label: 'Where', width: scrapped ? '16%' : '28%', render: (t) => whereText(t) },
     { key: 'run', label: 'Run', align: 'right', width: '8%', render: (t) => formatRunTotals(t) },
-    { key: 'cost', label: 'Total cost', align: 'right', width: '14%', render: (t) => [formatCurrency(t.totalCost), t.repairCost > 0 ? `incl. repairs ${formatCurrency(t.repairCost)}` : null] },
+    { key: 'cost', label: 'Total cost', align: 'right', width: '14%', render: (t) => [formatCurrency(t.totalCost), ...costNotes(t)] },
+    ...(scrapped ? [{ key: 'scrapValue', label: 'Scrap Value', align: 'right', width: '12%', render: scrapValueText }] : []),
   ];
 }
 
-// Totals at the top of the PDF: how many tyres it lists, and their total cost.
+// Totals at the top of the PDF: how many tyres it lists, their total cost, and for scrapped tyres the scrap value.
 export function storePrintSummary(rows) {
-  const total = rows.reduce((sum, t) => sum + (Number(t.totalCost) || 0), 0);
+  const add = (pick) => Math.round(rows.reduce((sum, t) => sum + (Number(pick(t)) || 0), 0) * 100) / 100;
+  const scrapped = rows.filter((t) => t.status === 'scrapped');
   return [
     { label: 'Total records', value: formatNumber(rows.length) },
-    { label: 'Total cost', value: formatCurrency(Math.round(total * 100) / 100) },
+    { label: 'Total cost', value: formatCurrency(add((t) => t.totalCost)) },
+    ...(scrapped.length > 0 ? [{ label: 'Scrap value received', value: formatCurrency(add((t) => (t.status === 'scrapped' ? t.scrapValue : 0))) }] : []),
   ];
 }
 
@@ -140,10 +155,17 @@ export default function TyreStoresPage() {
       render: (t) => (
         <div className="flex flex-col items-end">
           <span className="font-semibold tabular-nums">{formatCurrency(t.totalCost)}</span>
-          {t.repairCost > 0 && <span className="text-xs text-steel-500 tabular-nums">incl. repairs {formatCurrency(t.repairCost)}</span>}
+          {costNotes(t).map((note) => (
+            <span key={note} className="text-xs whitespace-nowrap text-steel-500 tabular-nums">
+              {note}
+            </span>
+          ))}
         </div>
       ),
     },
+    ...(filters.status === 'scrapped'
+      ? [{ key: 'scrapValue', label: 'Scrap Value', align: 'right', render: (t) => <span className="whitespace-nowrap tabular-nums">{scrapValueText(t)}</span> }]
+      : []),
     {
       key: 'actions',
       label: '',
@@ -179,7 +201,7 @@ export default function TyreStoresPage() {
           rows: data,
           getRowKey: (t) => t.id,
           emptyMessage: EMPTY[filters.status],
-          columns: storePrintColumns(),
+          columns: storePrintColumns(filters.status),
         },
       ],
     };

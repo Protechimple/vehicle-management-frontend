@@ -5,13 +5,16 @@ import { Alert, Select, Spinner } from '../components/ui';
 import { DocTypeTable, useComplianceDashboard } from '../components/dashboard/ComplianceOverview';
 import { RunningCostCard, UsageCard } from '../components/dashboard/RunningCost';
 import MaintenanceCard, { useMaintenanceSummary } from '../components/dashboard/MaintenanceCard';
-import { SiteBreakdownCard, TeamCard, useSiteBreakdown } from '../components/dashboard/SiteBreakdown';
+import TeamCard from '../components/dashboard/TeamCard';
+import { AdBlueCard, CentringCard, TyreCard, useDashboardSection } from '../components/dashboard/ModuleCards';
 import { useAuth } from '../context/AuthContext';
 import useSiteNames from '../hooks/useSiteNames';
 
 const numberFormat = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
 
 const KPI_COLUMNS = { 3: 'md:grid-cols-3', 4: 'md:grid-cols-4' };
+// Tyre / AdBlue / Centring cards: side by side on wide screens, stacked below that.
+const SECTION_COLUMNS = { 2: 'xl:grid-cols-2', 3: 'xl:grid-cols-3' };
 
 function KpiCell({ label, value, detail, detailTone = 'text-steel-500', valueClass = 'text-xl sm:text-2xl', to, className = '' }) {
   const body = (
@@ -128,9 +131,19 @@ export default function DashboardPage() {
   const showParts = can('STOCK', 'READ');
   const showCosts = showFuel || showParts;
   const showTeam = can('USERS', 'VIEW_TEAM');
-  // Several sites in scope: compare them side by side.
-  const showBreakdown = !siteId && (isAdmin ? siteOptions.length > 1 : (siteIds?.length ?? 0) > 1);
-  const breakdown = useSiteBreakdown({ enabled: showBreakdown && refreshKey > 0, refreshKey });
+
+  // Tyres, AdBlue and Centring: one card each, for whichever modules the user may open.
+  const showTyres = can('TYRE', 'READ');
+  const showAdBlue = can('ADBLUE', 'READ');
+  const showCentring = can('CENTRING', 'READ');
+  const tyres = useDashboardSection(dashboardApi.tyres, { enabled: showTyres && refreshKey > 0, siteId, refreshKey });
+  const adblue = useDashboardSection(dashboardApi.adblue, { enabled: showAdBlue && refreshKey > 0, siteId, refreshKey });
+  const centring = useDashboardSection(dashboardApi.centring, { enabled: showCentring && refreshKey > 0, siteId, refreshKey });
+  const sections = [
+    showTyres && { key: 'tyres', state: tyres, Card: TyreCard, label: 'Loading tyres' },
+    showAdBlue && { key: 'adblue', state: adblue, Card: AdBlueCard, label: 'Loading AdBlue' },
+    showCentring && { key: 'centring', state: centring, Card: CentringCard, label: 'Loading centring' },
+  ].filter(Boolean);
 
   const monthly = siteId ? siteCost?.monthly : data?.monthly;
   const currentMonth = monthly?.[monthly.length - 1];
@@ -194,19 +207,7 @@ export default function DashboardPage() {
 
           <Alert tone="error">{fleetError}</Alert>
 
-          {(showBreakdown || showTeam) && (
-            <div className={`grid gap-3 ${showBreakdown && showTeam ? 'xl:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]' : ''}`}>
-              {showBreakdown &&
-                (breakdown.error ? (
-                  <Alert tone="error">{breakdown.error}</Alert>
-                ) : breakdown.data ? (
-                  <SiteBreakdownCard data={breakdown.data} onSelectSite={setSiteId} />
-                ) : (
-                  <CardPlaceholder label="Loading sites" />
-                ))}
-              {showTeam && <TeamCard refreshKey={refreshKey} />}
-            </div>
-          )}
+          {showTeam && <TeamCard refreshKey={refreshKey} />}
 
           <div
             className={`grid gap-3 ${
@@ -237,6 +238,20 @@ export default function DashboardPage() {
                 <CardPlaceholder label="Loading maintenance" />
               ))}
           </div>
+
+          {sections.length > 0 && (
+            <div className={`grid gap-3 ${SECTION_COLUMNS[sections.length] ?? ''}`}>
+              {sections.map(({ key, state, Card, label }) =>
+                state.error ? (
+                  <Alert key={key} tone="error">{state.error}</Alert>
+                ) : state.data ? (
+                  <Card key={key} data={state.data} />
+                ) : (
+                  <CardPlaceholder key={key} label={label} />
+                )
+              )}
+            </div>
+          )}
 
           {compliance.error ? <Alert tone="error">{compliance.error}</Alert> : compliance.data && <DocTypeTable data={compliance.data} siteId={linkSiteId} />}
         </>
