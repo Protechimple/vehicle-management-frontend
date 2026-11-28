@@ -364,7 +364,9 @@ function Dropdown({
             tabIndex={-1}
             aria-label={ariaLabel}
             aria-activedescendant={!searchable && activeOption ? `${baseId}-option-${active}` : undefined}
-            className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-1 focus:outline-none"
+            // flex-auto, not flex-1: starting from a zero height, iPhone Safari (and home-screen apps) can leave the
+            // list collapsed to nothing. Starting from its own height, it still shrinks to scroll within maxHeight.
+            className="min-h-0 flex-auto overflow-y-auto overscroll-contain py-1 focus:outline-none"
           >
             {shown.map((option, index) => {
               const isSelected = option.value === current;
