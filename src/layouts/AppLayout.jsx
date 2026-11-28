@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { BrandingProvider } from '../context/BrandingContext';
+import { AutoBackLink, BackLinkProvider } from '../components/ui';
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -24,8 +25,11 @@ export default function AppLayout() {
 
         <div className="flex min-w-0 flex-1 flex-col">
           <Header onToggleSidebar={() => setSidebarOpen((open) => !open)} />
-          <main className="flex-1 p-3 sm:p-5">
-            <Outlet />
+          <main className="min-w-0 flex-1 p-3 sm:p-5">
+            <BackLinkProvider>
+              <AutoBackLink home="/dashboard" hideOn={['/dashboard']} />
+              <Outlet />
+            </BackLinkProvider>
           </main>
         </div>
       </div>

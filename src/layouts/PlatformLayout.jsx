@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import ThemeToggle from '../components/ThemeToggle';
+import { AutoBackLink, BackLinkProvider } from '../components/ui';
 import { usePlatformAuth } from '../context/PlatformAuthContext';
 import { Initials } from '../pages/platform/tenantDisplay';
 
@@ -117,7 +118,10 @@ export default function PlatformLayout() {
 
         <main className="w-full flex-1 p-3 sm:p-6">
           <div className="mx-auto max-w-7xl">
-            <Outlet />
+            <BackLinkProvider>
+              <AutoBackLink home="/platform/tenants" hideOn={['/platform/tenants']} />
+              <Outlet />
+            </BackLinkProvider>
           </div>
         </main>
       </div>

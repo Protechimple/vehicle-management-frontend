@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { batteriesApi, sitesApi, listAll } from '../../api/client';
-import { Alert, Button, Card, Field, Input, Select } from '../../components/ui';
+import { Alert, Button, Card, Field, Input, Select, BackLink } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
 import useSiteNames from '../../hooks/useSiteNames';
 import { formatCurrency, todayDateOnly } from '../../config/batteries';
@@ -111,9 +111,7 @@ export default function AddBatteriesPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-3">
-        <Link to="/batteries" className="text-sm font-semibold text-brand-600 hover:underline">
-          ← Batteries
-        </Link>
+        <BackLink to="/batteries" label="Batteries" />
         <h1 className="mt-1 text-xl font-semibold text-steel-900">Add batteries</h1>
         <p className="mt-1 text-steel-500">Enter the batteries you bought. They go into store at the site, ready to fit.</p>
       </div>

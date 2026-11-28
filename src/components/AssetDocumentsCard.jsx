@@ -94,7 +94,7 @@ function DocumentRow({ assetType, assetId, slot, onUploaded }) {
   );
 }
 
-export default function AssetDocumentsCard({ assetType, assetId }) {
+export default function AssetDocumentsCard({ assetType, assetId, onChange }) {
   const [slots, setSlots] = useState(null);
   const [loadError, setLoadError] = useState(null);
 
@@ -120,7 +120,16 @@ export default function AssetDocumentsCard({ assetType, assetId }) {
       ) : (
         <div className="grid gap-2 sm:grid-cols-2">
           {slots.map((slot) => (
-            <DocumentRow key={slot.docType} assetType={assetType} assetId={assetId} slot={slot} onUploaded={load} />
+            <DocumentRow
+              key={slot.docType}
+              assetType={assetType}
+              assetId={assetId}
+              slot={slot}
+              onUploaded={async () => {
+                await load();
+                onChange?.();
+              }}
+            />
           ))}
         </div>
       )}

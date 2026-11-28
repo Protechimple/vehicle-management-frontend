@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import {useNavigate, useParams, useSearchParams} from 'react-router-dom';
 import { fuelTransactionsApi, machineryApi, siteFuelStockApi, vehiclesApi, listAll } from '../../api/client';
-import { Alert, Button, Card, Field, Input, Select, Spinner } from '../../components/ui';
+import { Alert, Button, Card, Field, Input, Select, Spinner, BackLink } from '../../components/ui';
 import useSiteNames from '../../hooks/useSiteNames';
 import {
   SOURCE_LABEL,
@@ -219,9 +219,7 @@ export default function FuelIssueFormPage() {
     return (
       <div className="mx-auto max-w-3xl">
         <Alert tone="error">{loadError}</Alert>
-        <Link to="/fuel/issues" className="text-sm font-semibold text-brand-600 hover:underline">
-          ← Back to fuel issues
-        </Link>
+        <BackLink to="/fuel/issues" label="Back to fuel issues" />
       </div>
     );
   }
@@ -231,9 +229,7 @@ export default function FuelIssueFormPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-3">
-        <Link to="/fuel/issues" className="text-sm font-semibold text-brand-600 hover:underline">
-          ← Fuel issues
-        </Link>
+        <BackLink to="/fuel/issues" label="Fuel issues" />
         <h1 className="mt-1 text-xl font-semibold text-steel-900">{isEdit ? 'Edit fuel issue' : 'Issue fuel'}</h1>
       </div>
 

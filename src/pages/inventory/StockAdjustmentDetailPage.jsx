@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { stockAdjustmentsApi } from '../../api/client';
-import { Alert, Badge, Card, Spinner, Table } from '../../components/ui';
+import { Alert, Badge, Card, Spinner, Table, BackLink } from '../../components/ui';
 
 function Detail({ label, children }) {
   return (
@@ -58,9 +58,7 @@ export default function StockAdjustmentDetailPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-5">
-        <Link to="/inventory/movements" state={{ type: "ADJUSTMENT" }} className="text-sm font-semibold text-brand-600 hover:underline">
-          ← All stock adjustments
-        </Link>
+        <BackLink to="/inventory/movements" state={{ type: "ADJUSTMENT" }} label="All stock adjustments" />
         <h1 className="mt-1 text-xl font-semibold text-steel-900">{adjustment.adjustmentNumber}</h1>
       </div>
 

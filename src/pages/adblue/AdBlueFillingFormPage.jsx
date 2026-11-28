@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { adblueApi, machineryApi, sitesApi, vehiclesApi, listAll } from '../../api/client';
-import { Alert, Button, Card, Field, Input, Select, Spinner } from '../../components/ui';
+import { Alert, Button, Card, Field, Input, Select, Spinner, BackLink } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
 import useSiteNames from '../../hooks/useSiteNames';
 import { assetDisplayName, formatCurrency, formatLitres, todayDateOnly } from '../../config/fuel';
@@ -116,9 +116,7 @@ export default function AdBlueFillingFormPage() {
   }
 
   const backLink = (
-    <Link to="/adblue/fillings" className="text-sm font-semibold text-brand-600 hover:underline">
-      ← AdBlue filling records
-    </Link>
+    <BackLink to="/adblue/fillings" label="AdBlue filling records" />
   );
 
   if (loadError) {

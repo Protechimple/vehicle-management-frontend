@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import {useNavigate, useParams} from 'react-router-dom';
 import { externalFuelApi, siteFuelStockApi, sitesApi, listAll } from '../../api/client';
-import { Alert, Button, Card, Field, Input, Select, Spinner } from '../../components/ui';
+import { Alert, Button, Card, Field, Input, Select, Spinner, BackLink } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
 import {
   EXTERNAL_CATEGORY,
@@ -16,9 +16,10 @@ const MOBILE_PATTERN = /^\+?[0-9\s\-()]+$/;
 
 function Figure({ label, value, tone = 'text-steel-900' }) {
   return (
-    <span className="whitespace-nowrap">
+    // The label (it can hold a long site name) may wrap on narrow phones; the figure itself stays on one line.
+    <span className="wrap-break-word">
       <span className="text-steel-500">{label} </span>
-      <span className={`font-semibold tabular-nums ${tone}`}>{value}</span>
+      <span className={`font-semibold whitespace-nowrap tabular-nums ${tone}`}>{value}</span>
     </span>
   );
 }
@@ -185,9 +186,7 @@ export default function ExternalFuelFormPage() {
   }
 
   const backLink = (
-    <Link to="/fuel/external" className="text-sm font-semibold text-brand-600 hover:underline">
-      ← External vehicle fuel
-    </Link>
+    <BackLink to="/fuel/external" label="External vehicle fuel" />
   );
 
   if (loadError) {

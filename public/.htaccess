@@ -8,3 +8,14 @@
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /index.html [L]
 </IfModule>
+
+# Home-screen app: serve the manifest with its proper type.
+AddType application/manifest+json .webmanifest
+
+# A home-screen app can keep an old index.html for a long time. Always revalidate it (and the manifest) so a
+# new release is picked up on the next open; the built JS/CSS have hashed names and are unaffected.
+<IfModule mod_headers.c>
+  <FilesMatch "^(index\.html|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>

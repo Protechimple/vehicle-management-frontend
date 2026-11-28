@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { assetIssuesApi, issueReversalsApi } from '../../api/client';
-import { Alert, Badge, Button, Card, Field, Input, Modal, Spinner, Table } from '../../components/ui';
+import { Alert, Badge, Button, Card, Field, Input, Modal, Spinner, Table, BackLink } from '../../components/ui';
 import Can from '../../components/Can';
 import useSiteNames from '../../hooks/useSiteNames';
 import { assetIdentity, assetTypeLabel } from '../../config/assetDetails';
@@ -163,9 +163,7 @@ export default function AssetIssueDetailPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-5">
-        <Link to="/inventory/movements" state={{ type: "ISSUE" }} className="text-sm font-semibold text-brand-600 hover:underline">
-          ← All asset issues
-        </Link>
+        <BackLink to="/inventory/movements" state={{ type: "ISSUE" }} label="All asset issues" />
         <h1 className="mt-1 text-xl font-semibold text-steel-900">{issue.issueNumber}</h1>
         <div className="mt-1">
           <StatusBadge status={issue.status} />

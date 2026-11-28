@@ -30,10 +30,12 @@ export default function Modal({ open, onClose, title, description, children, foo
       aria-labelledby="modal-title"
       // dvh where supported: on iPhone 100vh is taller than the area Safari's toolbars leave visible, so a tall dialog
       // could run under the toolbar and hide its footer buttons.
-      className={`fixed inset-0 m-auto max-h-[calc(100vh-2rem)] supports-[height:100dvh]:max-h-[calc(100dvh-2rem)] ${wide === 'xl' ? 'w-[min(64rem,calc(100vw-2rem))]' : wide ? 'w-[min(44rem,calc(100vw-2rem))]' : 'w-[min(28rem,calc(100vw-2rem))]'} flex-col overflow-hidden rounded border border-steel-200 bg-surface p-0 backdrop:bg-brand-900/50 open:flex`}
+      // The whole dialog scrolls, never just a strip of it: when the space gets short (keyboard open, phone held
+      // sideways) a fixed header could leave the form only a line or two. The footer stays pinned to the bottom, and
+      // on large screens the header stays pinned too.
+      className={`fixed inset-0 m-auto max-h-[calc(100vh-2rem)] supports-[height:100dvh]:max-h-[calc(100dvh-2rem)] ${wide === 'xl' ? 'w-[min(64rem,calc(100vw-2rem))]' : wide ? 'w-[min(44rem,calc(100vw-2rem))]' : 'w-[min(28rem,calc(100vw-2rem))]'} flex-col overflow-y-auto overscroll-contain rounded border border-steel-200 bg-surface p-0 backdrop:bg-brand-900/50 open:flex`}
     >
-      {/* Header and footer stay put; only the content between them scrolls. */}
-      <div className="flex shrink-0 items-start justify-between gap-4 border-b border-steel-200 px-5 py-4">
+      <div className="flex shrink-0 items-start justify-between gap-4 border-b border-steel-200 bg-surface px-5 py-4 lg:sticky lg:top-0 lg:z-10">
         <div className="min-w-0">
           <h2 id="modal-title" className="text-base font-semibold text-steel-900">
             {title}
@@ -53,10 +55,10 @@ export default function Modal({ open, onClose, title, description, children, foo
         </button>
       </div>
 
-      {children && <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>}
+      {children && <div className="shrink-0 grow px-5 py-4">{children}</div>}
 
       {footer && (
-        <div className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-steel-200 bg-steel-50 px-5 py-3">
+        <div className="sticky bottom-0 z-10 flex shrink-0 flex-wrap justify-end gap-2 border-t border-steel-200 bg-steel-50 px-5 py-3">
           {footer}
         </div>
       )}
